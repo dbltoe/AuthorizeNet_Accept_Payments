@@ -74,6 +74,11 @@ class ScriptedInstaller extends ScriptedInstallBase
      */
     protected function anaRequirementsMet(): bool
     {
+        // The admin always has these from application_top; a command-line
+        // installer may not, and "no constant" must not read as version 0.
+        if ((!defined('PROJECT_VERSION_MAJOR') || !defined('PROJECT_VERSION_MINOR')) && defined('DIR_FS_CATALOG') && is_file(DIR_FS_CATALOG . 'includes/version.php')) {
+            require DIR_FS_CATALOG . 'includes/version.php';
+        }
         $zcVersion = defined('PROJECT_VERSION_MAJOR') && defined('PROJECT_VERSION_MINOR')
             ? PROJECT_VERSION_MAJOR . '.' . PROJECT_VERSION_MINOR
             : '0.0.0';

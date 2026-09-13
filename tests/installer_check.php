@@ -79,6 +79,7 @@ check('an upgrade re-runs the idempotent table create', count($db->log) === 1 &&
 section('refusals other than the release');
 $src = file_get_contents($PLUGIN . '/Installer/ScriptedInstaller.php');
 check('PHP 7.4 is the floor', strpos($src, "MIN_PHP_VERSION = '7.4.0'") !== false);
+check('a missing version constant loads includes/version.php rather than reading as 0.0.0 (found on the _test223 CLI install)', strpos($src, "require DIR_FS_CATALOG . 'includes/version.php';") !== false);
 check('curl and json are required', strpos($src, "function_exists('curl_init')") !== false && strpos($src, "function_exists('json_encode')") !== false);
 check('refusals go through the error container as friendly messages', substr_count($src, '$this->errorContainer->addError(0, $message, true, $message)') === 1);
 
