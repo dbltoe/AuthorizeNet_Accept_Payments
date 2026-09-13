@@ -1,0 +1,4 @@
+# PHP builds for the harness runner live beside the tests, not in the repo.
+tests/php/
+# Log files the harness may leave behind.
+*.log
