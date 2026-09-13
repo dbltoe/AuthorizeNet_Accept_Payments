@@ -48,6 +48,15 @@ pages for the sandbox account.
   gateway's reason; no order is created. The attempt is still recorded in the
   transaction table (without an order id) for troubleshooting.
 
+## Settings survive a Remove
+
+Modules > Payment > Remove keeps a copy of every setting except the on/off
+switch in a single row of the configuration table
+(`AUTHORIZENET_ACCEPT_SETTINGS_STASH`, in the payment modules group, so no
+configuration page lists it). The next Install writes those values over the
+defaults, deletes the row, and shows a message saying how many were restored.
+Plugin Manager > Uninstall deletes the row without restoring anything.
+
 ## Logs
 
 Log files are named `authnet_accept_<kind>_<transaction id>_<date>.log` and

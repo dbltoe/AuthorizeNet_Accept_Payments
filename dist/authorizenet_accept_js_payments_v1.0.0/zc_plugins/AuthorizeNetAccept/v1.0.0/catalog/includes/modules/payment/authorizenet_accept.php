@@ -35,6 +35,8 @@ class authorizenet_accept extends base
     const TOKEN_TTL_MS = 600000;
     /** Buttons the checkout script intercepts: Zen Cart's Continue, and One Page Checkout's Review / Confirm. */
     const SUBMIT_SELECTOR = '#paymentSubmit input[type="submit"], #paymentSubmit input[type="image"], #paymentSubmit button, #opc-order-confirm, #opc-order-review, #checkoutOneSubmit';
+    /** Where the settings wait between a Remove and a re-Install under Modules > Payment. */
+    const SETTINGS_STASH_KEY = 'AUTHORIZENET_ACCEPT_SETTINGS_STASH';
 
     /** @var string */
     public $code = 'authorizenet_accept';
@@ -1047,6 +1049,67 @@ class authorizenet_accept extends base
         $this->installKey('Duplicate Window (seconds)', 'DUPLICATE_WINDOW', '120', 'The gateway rejects a second transaction that matches an earlier one within this many seconds. 0 turns the check off.', 15);
         $this->installKey('Send Line Items', 'SEND_LINE_ITEMS', 'True', 'Send the ordered products (up to 30) with the transaction, so they appear in the Merchant Interface. Not sent when the order is converted to another currency.', 16, "zen_cfg_select_option(array('True', 'False'), ");
         $this->installKey('Debug Mode', 'DEBUGGING', 'Off', 'Log File writes each gateway call (with the key and nonce masked) to the logs folder. Log and Email also emails the store owner about failed calls. Sandbox mode always writes the log.', 17, "zen_cfg_select_option(array('Off', 'Log File', 'Log and Email'), ");
+
+        $this->restoreStashedSettings();
+    }
+
+    /**
+     * Modules > Payment > Remove keeps a copy of the settings (see remove()),
+     * so a re-install gets the store's own credentials and choices back
+     * instead of the defaults. The copy is used once and deleted.
+     */
+    protected function restoreStashedSettings(): void
+    {
+        global $db, $messageStack;
+
+        $row = $db->Execute("SELECT configuration_value FROM " . TABLE_CONFIGURATION . " WHERE configuration_key = '" . self::SETTINGS_STASH_KEY . "' LIMIT 1");
+        if ($row->EOF) {
+            return;
+        }
+        $saved = json_decode((string)$row->fields['configuration_value'], true);
+        $restored = 0;
+        if (is_array($saved)) {
+            foreach ($this->keys() as $key) {
+                if (!array_key_exists($key, $saved) || !is_scalar($saved[$key])) {
+                    continue;
+                }
+                $db->Execute("UPDATE " . TABLE_CONFIGURATION . " SET configuration_value = '" . zen_db_input((string)$saved[$key]) . "' WHERE configuration_key = '" . zen_db_input($key) . "' LIMIT 1");
+                $restored++;
+            }
+        }
+        $db->Execute("DELETE FROM " . TABLE_CONFIGURATION . " WHERE configuration_key = '" . self::SETTINGS_STASH_KEY . "'");
+        if ($restored > 0 && is_object($messageStack)) {
+            $messageStack->add_session(sprintf(MODULE_PAYMENT_AUTHORIZENET_ACCEPT_TEXT_SETTINGS_RESTORED, $restored), 'success');
+        }
+    }
+
+    /**
+     * Keep the current settings (all but the on/off switch) in one row that
+     * the Remove does not touch, so the next Install can put them back. The
+     * row lives in the same table the settings already live in, so nothing
+     * is stored anywhere new.
+     */
+    protected function stashSettings(): void
+    {
+        global $db;
+
+        $values = [];
+        foreach ($this->keys() as $key) {
+            if ($key === self::CONFIG_PREFIX . 'STATUS' || !defined($key)) {
+                continue;
+            }
+            $values[$key] = (string)constant($key);
+        }
+        if ($values === []) {
+            return;
+        }
+        $db->Execute("DELETE FROM " . TABLE_CONFIGURATION . " WHERE configuration_key = '" . self::SETTINGS_STASH_KEY . "'");
+        $db->Execute(
+            "INSERT INTO " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added)
+             VALUES ('Authorize.net (Accept.js) saved settings', '" . self::SETTINGS_STASH_KEY . "', '" . zen_db_input(json_encode($values, JSON_UNESCAPED_SLASHES)) . "',
+                     'The settings as they were when the module was removed under Modules > Payment; restored by the next Install and then deleted. Plugin Manager > Uninstall deletes it too.',
+                     " . self::CONFIG_GROUP_ID . ", 99, now())"
+        );
     }
 
     protected function installKey(string $title, string $key, string $value, string $description, int $sort, ?string $setFunction = null, ?string $useFunction = null): void
@@ -1069,10 +1132,19 @@ class authorizenet_accept extends base
      * Remove the settings, and take the module out of the installed list
      * when the plugin is being uninstalled around it (the Modules > Payment
      * page does that part itself when the Remove button is used).
+     *
+     * @param bool $keepSettings  true (the Remove button): stash the settings
+     *                            for the next Install. false (Plugin Manager
+     *                            uninstall): forget them.
      */
-    public function remove()
+    public function remove($keepSettings = true)
     {
         global $db;
+        if ($keepSettings === true) {
+            $this->stashSettings();
+        } else {
+            $db->Execute("DELETE FROM " . TABLE_CONFIGURATION . " WHERE configuration_key = '" . self::SETTINGS_STASH_KEY . "'");
+        }
         $db->Execute("DELETE FROM " . TABLE_CONFIGURATION . " WHERE configuration_key LIKE 'MODULE\_PAYMENT\_AUTHORIZENET\_ACCEPT\_%'");
 
         $installed = $db->Execute("SELECT configuration_value FROM " . TABLE_CONFIGURATION . " WHERE configuration_key = 'MODULE_PAYMENT_INSTALLED' LIMIT 1");

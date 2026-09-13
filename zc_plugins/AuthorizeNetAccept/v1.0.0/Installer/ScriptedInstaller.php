@@ -59,10 +59,13 @@ class ScriptedInstaller extends ScriptedInstallBase
                 require_once $moduleFile;
                 if (class_exists('authorizenet_accept')) {
                     $module = new authorizenet_accept(true);
-                    $module->remove();
+                    $module->remove(false); // an uninstall forgets the settings; a Remove under Modules > Payment keeps them
                 }
             }
         }
+        // The settings copy a Modules > Payment Remove leaves for the next Install
+        // has no reason to outlive the plugin.
+        $this->executeInstallerSql("DELETE FROM " . DB_PREFIX . "configuration WHERE configuration_key = 'AUTHORIZENET_ACCEPT_SETTINGS_STASH'");
         return true;
     }
 

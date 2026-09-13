@@ -37,6 +37,7 @@ Why it exists (researched 2026-09-13):
 | Version floor | Zen Cart 2.1.0 | Payment modules load from `zc_plugins` from 2.1.0 (verified absent in 1.5.8 and 2.0.0). PHP 7.4 through 8.5. |
 | Config | Created by the module's `install()` under Modules > Payment | Exactly like a core payment module; the Plugin Manager installer only creates the table. |
 | No `zen_config()` | `cfg()` helper on `defined()`/`constant()` | `zen_config()` is 3.0.0 only. |
+| Settings survive Remove | `remove()` stashes all but STATUS in one configuration row; `install()` restores and deletes it; Plugin Manager uninstall forgets it | Prompted by zencart/documentation#1456 (torvista, 2026-09-13): re-installing a payment module should not mean retyping every key. Done in the module rather than in a per-site observer so every store gets it. |
 
 ## 3. File map
 

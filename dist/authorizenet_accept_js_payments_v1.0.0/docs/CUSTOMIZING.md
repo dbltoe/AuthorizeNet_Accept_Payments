@@ -89,6 +89,43 @@ if ($result['ok']) {
 else in the body is sent in the order given, so build elements in schema
 order (or pass them through `AuthorizeNetAcceptApi::orderKeys()`).
 
+## Preset credentials on a test store
+
+The module already restores its own settings across a Remove and re-Install
+(see CONFIGURATION.md). For a development store that is rebuilt from scratch,
+Zen Cart 2.2.0 and later fire `NOTIFY_ADMIN_MODULES_DO_INSTALL` right after any
+module's `install()`, with `['module_name' => 'authorizenet_accept']` (2.1.0
+has no such notifier), and an admin observer can write the sandbox credentials
+at that moment:
+
+```php
+class zcObserverMyStoreModuleDefaults extends base
+{
+    public function __construct()
+    {
+        $this->attach($this, ['NOTIFY_ADMIN_MODULES_DO_INSTALL']);
+    }
+
+    public function update(&$class, $eventID, $info)
+    {
+        global $db;
+        if (($info['module_name'] ?? '') !== 'authorizenet_accept') {
+            return;
+        }
+        foreach ([
+            'MODULE_PAYMENT_AUTHORIZENET_ACCEPT_LOGIN' => 'your sandbox login id',
+            'MODULE_PAYMENT_AUTHORIZENET_ACCEPT_TXNKEY' => 'your sandbox transaction key',
+            'MODULE_PAYMENT_AUTHORIZENET_ACCEPT_CLIENT_KEY' => 'your sandbox public client key',
+        ] as $key => $value) {
+            $db->Execute("UPDATE " . TABLE_CONFIGURATION . " SET configuration_value = '" . zen_db_input($value) . "' WHERE configuration_key = '" . $key . "' LIMIT 1");
+        }
+    }
+}
+```
+
+Put it in the admin's `includes/classes/observers/auto.mystoremoduledefaults.php`
+on the test store only; it is a place for sandbox keys, never live ones.
+
 ## Styling
 
 The module adds one element of its own, `#authorizenet_accept-error`, with

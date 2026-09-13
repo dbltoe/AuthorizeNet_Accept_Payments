@@ -7,8 +7,44 @@
 require __DIR__ . '/_bootstrap.php';
 
 define('IS_ADMIN_FLAG', true);
-ana_define_environment(['AUTHORIZATION_TYPE' => 'Authorize']);
 $PLUGIN = ana_plugin_dir();
+
+if (($argv[1] ?? '') === 'fresh-install') {
+    // A store where the module is not installed: no MODULE_PAYMENT_* constants
+    // at all, but a stash row left by an earlier Remove.
+    $none = [];
+    foreach (['STATUS', 'LOGIN', 'TXNKEY', 'CLIENT_KEY', 'TESTMODE', 'AUTHORIZATION_TYPE', 'USE_CVV', 'CURRENCY', 'SORT_ORDER', 'ZONE', 'ORDER_STATUS_ID', 'AUTH_ORDER_STATUS_ID', 'REFUNDED_ORDER_STATUS_ID', 'REVIEW_ORDER_STATUS_ID', 'EMAIL_CUSTOMER', 'DUPLICATE_WINDOW', 'SEND_LINE_ITEMS', 'DEBUGGING'] as $k) {
+        $none[$k] = null;
+    }
+    ana_define_environment($none);
+    require $PLUGIN . '/catalog/includes/modules/payment/authorizenet_accept.php';
+    $db = new AnaDb();
+    $db->answers["configuration_key = 'AUTHORIZENET_ACCEPT_SETTINGS_STASH'"] = [['configuration_value' => json_encode([
+        'MODULE_PAYMENT_AUTHORIZENET_ACCEPT_LOGIN' => 'savedLogin',
+        'MODULE_PAYMENT_AUTHORIZENET_ACCEPT_TXNKEY' => "saved'Key",
+        'MODULE_PAYMENT_AUTHORIZENET_ACCEPT_TESTMODE' => 'Production',
+        'MODULE_PAYMENT_AUTHORIZENET_ACCEPT_NOT_A_KEY' => 'ignored',
+        'MODULE_PAYMENT_AUTHORIZENET_ACCEPT_STATUS' => 'False',
+    ])]];
+    $messageStack = new AnaMessageStack();
+    $module = new authorizenet_accept();
+    check('the module is not installed in this process', $module->sort_order === null);
+    $module->install();
+    $inserts = $db->matching('INSERT INTO zen_configuration');
+    check('install() creates the 18 settings', count($inserts) === 18);
+    $updates = $db->matching('UPDATE zen_configuration SET configuration_value');
+    check('the stashed values are written over the defaults, and only for real keys', count($updates) === 4
+        && count($db->matching("SET configuration_value = 'savedLogin' WHERE configuration_key = 'MODULE_PAYMENT_AUTHORIZENET_ACCEPT_LOGIN'")) === 1
+        && count($db->matching("SET configuration_value = 'saved\\'Key' WHERE configuration_key = 'MODULE_PAYMENT_AUTHORIZENET_ACCEPT_TXNKEY'")) === 1
+        && count($db->matching("SET configuration_value = 'Production' WHERE")) === 1
+        && $db->matching('NOT_A_KEY') === []);
+    check('the stash is deleted once used', count($db->matching("DELETE FROM zen_configuration WHERE configuration_key = 'AUTHORIZENET_ACCEPT_SETTINGS_STASH'")) === 1);
+    $last = end($messageStack->messages);
+    check('the store owner is told, and told to check the credentials', $last !== false && strpos($last['message'], 'restored (4 values)') !== false && $last['type'] === 'success');
+    ana_done('fresh install restores a stash');
+}
+
+ana_define_environment(['AUTHORIZATION_TYPE' => 'Authorize']);
 require $PLUGIN . '/catalog/includes/modules/payment/authorizenet_accept.php';
 
 $db = new AnaDb();
@@ -108,12 +144,28 @@ check('void request', $req === ['transactionType' => 'voidTransaction', 'refTran
 check('history: voided, refunded status', strpos(end($GLOBALS['ana_history'])['message'], 'VOIDED') === 0 && end($GLOBALS['ana_history'])['status'] === 5);
 check('the admin-transaction notifier fired', in_array('NOTIFY_AUTHNET_ACCEPT_ADMIN_TRANSACTION', base::$events, true));
 
-section('remove()');
+section('remove(): the Modules > Payment button keeps the settings for the next Install');
 $db->log = [];
 $module->remove();
-check('settings are deleted by prefix', strpos($db->log[0], "DELETE FROM zen_configuration WHERE configuration_key LIKE 'MODULE\\_PAYMENT\\_AUTHORIZENET\\_ACCEPT\\_%'") === 0);
+$stash = $db->matching("INSERT INTO zen_configuration");
+check('one stash row is written before the settings go', count($stash) === 1 && strpos($stash[0], "'AUTHORIZENET_ACCEPT_SETTINGS_STASH'") !== false && strpos($db->log[0], "DELETE FROM zen_configuration WHERE configuration_key = 'AUTHORIZENET_ACCEPT_SETTINGS_STASH'") === 0);
+check('the stash holds the credentials and choices, but not the on/off switch', strpos($stash[0], 'login123') !== false && strpos($stash[0], 'txnkeySECRET') !== false && strpos($stash[0], '\\"MODULE_PAYMENT_AUTHORIZENET_ACCEPT_TESTMODE\\":\\"Sandbox\\"') !== false && strpos($stash[0], 'MODULE_PAYMENT_AUTHORIZENET_ACCEPT_STATUS') === false);
+check('the stash row sits in the payment group where no configuration page lists it', strpos($stash[0], ", 6, 99, now())") !== false);
+check('settings are then deleted by prefix', count($db->matching("DELETE FROM zen_configuration WHERE configuration_key LIKE 'MODULE\\_PAYMENT\\_AUTHORIZENET\\_ACCEPT\\_%'")) === 1);
 $upd = $db->matching("SET configuration_value = 'freecharger.php;cod.php'");
 check('the module is taken out of MODULE_PAYMENT_INSTALLED, leaving the others', count($upd) === 1);
+
+section('remove(false): the Plugin Manager uninstall forgets the settings');
+$db->log = [];
+$module->remove(false);
+check('no stash is written and any old one is deleted', $db->matching("INSERT INTO") === [] && count($db->matching("DELETE FROM zen_configuration WHERE configuration_key = 'AUTHORIZENET_ACCEPT_SETTINGS_STASH'")) === 1);
+
+section('install(): restoring a stash, in a child process with no settings defined');
+$out = shell_exec(escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg(__FILE__) . ' fresh-install 2>&1');
+check('fresh-install child passed', is_string($out) && strpos($out, 'PASS:') !== false && strpos($out, 'FAIL') === false);
+if (!is_string($out) || strpos($out, 'PASS:') === false) {
+    echo "          " . str_replace("\n", "\n          ", trim((string)$out)) . "\n";
+}
 
 section('install()');
 $src = file_get_contents($PLUGIN . '/catalog/includes/modules/payment/authorizenet_accept.php');

@@ -60,9 +60,13 @@ Modules > Payment. Orders paid through AIM keep their history; the old
 module's order-page tools go with it, so capture or refund any open AIM
 transactions before you remove it, or do so in the Merchant Interface.
 
-## Uninstall
+## Remove and uninstall
 
-Modules > Payment > Remove takes the module's settings away. Plugin Manager >
-Uninstall does that too if you skipped it, and removes the plugin files'
-registration. The transaction table is kept on purpose: it holds your payment
-history. Drop `authorizenet_accept` yourself if you're sure you don't need it.
+Modules > Payment > Remove takes the module off the checkout page but keeps a
+copy of its settings, credentials included, so the next Install restores them
+and says so. The copy is used once and deleted.
+
+Plugin Manager > Uninstall removes the module if you skipped that step,
+forgets the saved settings, and unregisters the plugin. The transaction table
+is kept on purpose: it holds your payment history. Drop `authorizenet_accept`
+yourself if you're sure you don't need it.

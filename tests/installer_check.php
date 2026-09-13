@@ -92,6 +92,7 @@ $ok = (new ScriptedInstaller($db, new AnaErrors()))->doUninstall();
 check('uninstall succeeds', $ok === true);
 check('the module settings are deleted', count($db->matching("DELETE FROM zen_configuration WHERE configuration_key LIKE 'MODULE\\_PAYMENT\\_AUTHORIZENET\\_ACCEPT\\_%'")) === 1);
 check('the module leaves MODULE_PAYMENT_INSTALLED', count($db->matching("SET configuration_value = 'cod.php'")) === 1);
+check('no settings stash is written and any old one is deleted', $db->matching('INSERT INTO') === [] && count($db->matching("configuration_key = 'AUTHORIZENET_ACCEPT_SETTINGS_STASH'")) >= 1);
 check('the transaction table is kept', $db->matching('DROP TABLE') === []);
 
 section('the refusal cases, in child processes');

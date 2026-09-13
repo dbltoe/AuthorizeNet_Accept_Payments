@@ -170,8 +170,9 @@ th { background: #f0f0f0; }
 <h2 id="aim">14. Moving from the AIM module</h2>
 <p>Install this module alongside AIM, test it, then remove AIM under Modules &gt; Payment. Orders paid through AIM keep their history, but AIM's order-page tools go with it, so capture or refund any open AIM authorizations first, or do so in the Merchant Interface.</p>
 
-<h2 id="uninstall">15. Uninstalling</h2>
-<p>Modules &gt; Payment &gt; Remove takes the module's settings away. Plugin Manager &gt; Uninstall does that too if you skipped it. The transaction table (<code>authorizenet_accept</code>) is kept on purpose, because it holds your payment history; drop it yourself if you're sure you don't need it.</p>
+<h2 id="uninstall">15. Removing and uninstalling</h2>
+<p><strong>Modules &gt; Payment &gt; Remove</strong> takes the module off the checkout page but keeps a copy of its settings, credentials included, in one row of the configuration table. The next Install puts them back and tells you so, so you don't retype the three keys and fifteen choices after a test cycle or a mistaken remove. The copy is used once and deleted.</p>
+<p><strong>Plugin Manager &gt; Uninstall</strong> removes the module (if you skipped the step above), forgets the saved settings, and unregisters the plugin. The transaction table (<code>authorizenet_accept</code>) is kept on purpose, because it holds your payment history; drop it yourself if you're sure you don't need it.</p>
 
 <h2 id="developers">16. For developers</h2>
 <p>The module fires notifier events at every seam (the payment block, the descriptor whitelist, the request before it's sent, the result after) so an add-on can take a wallet token or a stored payment profile through the same path without editing the module. The list, with parameters and an example observer, is in <code>docs/CUSTOMIZING.md</code> in the package; the design notes are in <code>docs/DESIGN.md</code>.</p>

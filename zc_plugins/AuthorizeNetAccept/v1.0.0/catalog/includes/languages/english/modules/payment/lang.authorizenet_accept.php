@@ -45,6 +45,7 @@ $define = [
     'MODULE_PAYMENT_AUTHORIZENET_ACCEPT_TEXT_EXPIRY_PROBLEM' => 'The expiry date was not accepted.',
     'MODULE_PAYMENT_AUTHORIZENET_ACCEPT_TEXT_HELD_NOTE' => '***NOTE: Held for review by merchant.',
     'MODULE_PAYMENT_AUTHORIZENET_ACCEPT_TEXT_PAYMENT_LABEL' => 'Credit Card payment.',
+    'MODULE_PAYMENT_AUTHORIZENET_ACCEPT_TEXT_SETTINGS_RESTORED' => 'Your previous Authorize.net (Accept.js) settings were restored (%d values), including the credentials. Check them before you enable the module.',
 
     // Order page: transaction history
     'MODULE_PAYMENT_AUTHORIZENET_ACCEPT_TEXT_TRANSACTIONS_TITLE' => 'Authorize.net transactions for this order',
