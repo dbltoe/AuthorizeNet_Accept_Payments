@@ -2,7 +2,7 @@
 /**
  * Does this plugin only use what every supported Zen Cart release actually has?
  *
- * The claim is v2.1.0 through v3.0.0 from a single codebase, and the way that
+ * The claim is v1.5.8 through v3.0.0 from a single codebase, and the way that
  * claim breaks is one call to a helper that arrived in a later release. So
  * this does not guess from documentation: it reads the real installs under
  * F:\zclab\sites and asks each one whether it defines the function.
@@ -15,7 +15,7 @@ require __DIR__ . '/_bootstrap.php';
 $PLUGIN = ana_plugin_dir();
 $manifest = require $PLUGIN . '/manifest.php';
 
-$branchDirs = ['v210' => 'zc210', 'v220' => 'zc222', 'v230' => 'zc230', 'v300' => 'zc300'];
+$branchDirs = ['v158' => 'zc158', 'v200' => 'zc200', 'v210' => 'zc210', 'v220' => 'zc222', 'v230' => 'zc230', 'v300' => 'zc300'];
 $LAB = 'F:/zclab/sites';
 
 $available = [];
@@ -53,9 +53,12 @@ echo '          ' . count($calls) . ' distinct zen_* functions called: ' . implo
 
 section('source rules');
 $allSrc = '';
-foreach ($it as $f) {
-    if ($f->isFile() && strtolower($f->getExtension()) === 'php') {
-        $allSrc .= file_get_contents($f->getPathname());
+$bridgeIt = new RecursiveIteratorIterator(new RecursiveDirectoryIterator(ana_repo_root() . '/for_zen_cart_1.5.8_to_2.0.x', FilesystemIterator::SKIP_DOTS));
+foreach ([$it, $bridgeIt] as $tree) {
+    foreach ($tree as $f) {
+        if ($f->isFile() && strtolower($f->getExtension()) === 'php') {
+            $allSrc .= file_get_contents($f->getPathname());
+        }
     }
 }
 /* Syntax checks look at code only: string literals and comments are stripped
@@ -96,9 +99,22 @@ foreach ($available as $branch => $dir) {
     foreach ($missing as $fn) {
         echo "          missing in $branch: $fn\n";
     }
-    check("$branch loads payment modules from zc_plugins", strpos(file_get_contents($dir . '/includes/classes/payment.php'), 'zc_plugins') !== false);
+    $paymentClass = file_get_contents($dir . '/includes/classes/payment.php');
     $langLoader = $dir . '/includes/classes/ResourceLoaders/ArraysLanguageLoader.php';
-    check("$branch reads a plugin's payment-module language file", is_file($langLoader) && strpos(file_get_contents($langLoader), "'/modules/' . \$module_type") !== false);
+    $loaderSrc = is_file($langLoader) ? file_get_contents($langLoader) : '';
+    if (in_array($branch, ['v158', 'v200'], true)) {
+        /* These two are why the bridge files exist: the payment class, Modules > Payment
+         * and the order page read the core folders only. The bridge relies on three
+         * things they DO have: lang.* array files for modules, plugin extra_datafiles
+         * (the table name), and $installedPlugins to pick the installed version. */
+        check("$branch looks for a payment module only in the core folder, which is what the module bridge is for", strpos($paymentClass, 'zc_plugins') === false && strpos($paymentClass, "DIR_WS_MODULES . '/payment/'") !== false);
+        check("$branch loads a lang.* array file for a module from the core languages folder, which is what the language bridge is for", $loaderSrc !== '' && strpos($loaderSrc, "'lang.' . \$fileName") !== false);
+        $appTop = file_get_contents($dir . '/includes/application_top.php');
+        check("$branch loads plugin extra_datafiles and exposes \$installedPlugins", strpos($appTop, "'catalog/includes/extra_datafiles'") !== false && strpos($appTop, '$installedPlugins = ') !== false);
+    } else {
+        check("$branch loads payment modules from zc_plugins", strpos($paymentClass, 'zc_plugins') !== false);
+        check("$branch reads a plugin's payment-module language file", $loaderSrc !== '' && strpos($loaderSrc, "'/modules/' . \$module_type") !== false);
+    }
     $orders = $dir . '/admin/orders.php';
     check("$branch's order page still calls _doRefund / _doCapt / _doVoid", is_file($orders) && strpos(file_get_contents($orders), '_doRefund') !== false && strpos(file_get_contents($orders), '_doCapt') !== false && strpos(file_get_contents($orders), '_doVoid') !== false);
 }

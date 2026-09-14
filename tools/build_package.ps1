@@ -39,6 +39,9 @@ foreach ($f in $docs) { Copy-Item (Join-Path $root "docs\$f") (Join-Path $dist "
 # The whole plugin, in its zc_plugins path, exactly as it must be uploaded.
 Copy-Item (Join-Path $root 'zc_plugins') (Join-Path $dist 'zc_plugins') -Recurse
 
+# The bridge files for Zen Cart 1.5.8 - 2.0.x, in the folder the docs name.
+Copy-Item (Join-Path $root 'for_zen_cart_1.5.8_to_2.0.x') (Join-Path $dist 'for_zen_cart_1.5.8_to_2.0.x') -Recurse
+
 # readme.html again at the package root, so it can be opened straight out of
 # the download without digging four levels down.
 Copy-Item (Join-Path $root "zc_plugins\AuthorizeNetAccept\$version\readme.html") (Join-Path $dist 'readme.html')

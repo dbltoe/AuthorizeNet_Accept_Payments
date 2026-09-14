@@ -62,7 +62,8 @@ foreach ($missingEvents as $e) {
     echo "          missing: $e\n";
 }
 $top = file_get_contents($ROOT . '/README.md');
-check('README.md names the plugin and the version floor', strpos($top, 'Authorize.Net Accept.js Payments') !== false && strpos($top, '2.1.0') !== false);
+check('README.md names the plugin and the version floor', strpos($top, 'Authorize.Net Accept.js Payments') !== false && strpos($top, '1.5.8') !== false);
+check('the readme tells 1.5.8 - 2.0.x owners about the bridge folder, in the install and uninstall sections', substr_count($readme, 'for_zen_cart_1.5.8_to_2.0.x') >= 1 && substr_count($readme, 'bridge files') >= 2 && strpos($readme, '1.5.8 through 3.0.0') !== false);
 check('CHANGELOG.md and changelog.txt agree on the version', strpos(file_get_contents($ROOT . '/CHANGELOG.md'), $version) !== false && strpos(file_get_contents($PLUGIN . '/changelog.txt'), $version) !== false);
 check('LICENSE is GPL-2.0 with the GNU URL and no zen-cart.com URL', strpos(file_get_contents($ROOT . '/LICENSE'), 'gnu.org') !== false && strpos(file_get_contents($ROOT . '/LICENSE'), 'zen-cart.com') === false);
 
@@ -88,6 +89,18 @@ if (!is_dir($distDir)) {
     foreach ($stale as $s) {
         echo "          stale: $s\n";
     }
+    $bridgeSrc = $ROOT . '/for_zen_cart_1.5.8_to_2.0.x';
+    $bridgeStale = [];
+    $bridgeCount = 0;
+    foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($bridgeSrc, FilesystemIterator::SKIP_DOTS)) as $f) {
+        $bridgeCount++;
+        $relPath = substr(str_replace('\\', '/', $f->getPathname()), strlen($bridgeSrc));
+        $packaged = $distDir . '/for_zen_cart_1.5.8_to_2.0.x' . $relPath;
+        if (!is_file($packaged) || md5_file($packaged) !== md5_file($f->getPathname())) {
+            $bridgeStale[] = $relPath;
+        }
+    }
+    check('the bridge folder is packaged and current (' . $bridgeCount . ' files)', $bridgeCount === 3 && $bridgeStale === []);
     $zip = dirname($ROOT) . '/authorizenet_accept_js_payments_' . $version . '.zip';
     check('the release zip exists next to the repository', is_file($zip));
 }

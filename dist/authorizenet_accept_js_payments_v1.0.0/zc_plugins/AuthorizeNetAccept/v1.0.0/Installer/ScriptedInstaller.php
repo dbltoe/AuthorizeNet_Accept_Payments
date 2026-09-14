@@ -8,7 +8,7 @@
  * two halves behave exactly like a core payment module.
  *
  * Limited to the ScriptedInstaller API that exists on every supported release
- * (v2.1.0 -> v3.0.0): executeInstallerSql() only, and executeUpgrade() with an
+ * (v1.5.8 -> v3.0.0): executeInstallerSql() only, and executeUpgrade() with an
  * optional argument. Every step is idempotent, so an upgrade is a re-run of
  * the install.
  *
@@ -25,7 +25,18 @@ use Zencart\PluginSupport\ScriptedInstaller as ScriptedInstallBase;
 
 class ScriptedInstaller extends ScriptedInstallBase
 {
-    const MIN_ZC_VERSION = '2.1.0';
+    const MIN_ZC_VERSION = '1.5.8';
+    /**
+     * Below this release a payment module is only found in the core folders,
+     * so two bridge files there hand off to the plugin. The owner uploads
+     * them; this installer never writes into the core folders.
+     */
+    const BRIDGE_BELOW_ZC_VERSION = '2.1.0';
+    const BRIDGE_FOLDER = 'for_zen_cart_1.5.8_to_2.0.x';
+    const BRIDGE_FILES = [
+        'includes/modules/payment/authorizenet_accept.php',
+        'includes/languages/english/modules/payment/lang.authorizenet_accept.php',
+    ];
     const MIN_PHP_VERSION = '7.4.0';
     const MODULE_FILE = 'authorizenet_accept.php';
 
@@ -82,10 +93,26 @@ class ScriptedInstaller extends ScriptedInstallBase
         $zcVersion = defined('PROJECT_VERSION_MAJOR') && defined('PROJECT_VERSION_MINOR')
             ? PROJECT_VERSION_MAJOR . '.' . PROJECT_VERSION_MINOR
             : '0.0.0';
-        if (version_compare($zcVersion, self::MIN_ZC_VERSION, '<')) {
+        // 1.5.8a must not read as older than 1.5.8: version_compare() takes a
+        // trailing letter for a pre-release, so compare the digits only, as core does.
+        $zcNumeric = preg_replace('/[^0-9.]/', '', $zcVersion);
+        if (version_compare($zcNumeric, self::MIN_ZC_VERSION, '<')) {
             $this->anaRefuse('Authorize.Net Accept.js Payments needs Zen Cart ' . self::MIN_ZC_VERSION
-                . ' or later (payment modules can only be supplied by a plugin from that release on); this store runs ' . $zcVersion . '.');
+                . ' or later; this store runs ' . $zcVersion . '.');
             return false;
+        }
+        if (version_compare($zcNumeric, self::BRIDGE_BELOW_ZC_VERSION, '<')) {
+            $missing = [];
+            foreach (self::BRIDGE_FILES as $file) {
+                if (!defined('DIR_FS_CATALOG') || !is_file(DIR_FS_CATALOG . $file)) {
+                    $missing[] = $file;
+                }
+            }
+            if ($missing !== []) {
+                $this->anaRefuse('Zen Cart ' . $zcVersion . ' looks for a payment module only in its own includes folder, so on this release two more files are needed.'
+                    . ' Upload the includes folder from the package\'s ' . self::BRIDGE_FOLDER . ' folder to the store, then install again. Missing: ' . implode(', ', $missing) . '.');
+                return false;
+            }
         }
         if (version_compare(PHP_VERSION, self::MIN_PHP_VERSION, '<')) {
             $this->anaRefuse('Authorize.Net Accept.js Payments needs PHP ' . self::MIN_PHP_VERSION

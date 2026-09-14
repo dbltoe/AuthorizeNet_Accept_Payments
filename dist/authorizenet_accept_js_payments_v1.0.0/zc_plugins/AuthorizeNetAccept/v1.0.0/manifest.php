@@ -51,7 +51,7 @@ return [
         . $anaLinks,
     'pluginAuthor' => 'My Zen Cart Host (dbltoe)',
     'pluginId' => 0, // assigned by the Plugins Library on acceptance
-    'zcVersions' => ['v210', 'v220', 'v230', 'v300'],
+    'zcVersions' => ['v158', 'v200', 'v210', 'v220', 'v230', 'v300'],
     'changelog' => 'changelog.txt',
     'github_repo' => $anaGithubUrl,
     'pluginGroups' => [],

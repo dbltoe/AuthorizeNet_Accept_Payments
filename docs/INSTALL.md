@@ -2,8 +2,8 @@
 
 ## Before you start
 
-- Zen Cart 2.1.0 or later. Earlier releases can't load a payment module
-  from a plugin; the Plugin Manager will refuse the install and say so.
+- Zen Cart 1.5.8 or later. On 1.5.8 through 2.0.x two extra files are
+  uploaded in step 1; from 2.1.0 the plugin folder is all there is.
 - PHP 7.4 or later with the curl and json extensions (every host has them).
 - A live Authorize.Net account for real payments, or a free sandbox account
   for testing: https://developer.authorize.net/hello_world/sandbox.html
@@ -18,8 +18,20 @@ Upload the `zc_plugins/AuthorizeNetAccept` folder from the package into your
 store's `zc_plugins` directory, so that you have
 `zc_plugins/AuthorizeNetAccept/v1.0.0/manifest.php`.
 
-Nothing else in the package needs uploading. There are no core files to
-overwrite and no template files to merge.
+On Zen Cart 2.1.0 and later nothing else needs uploading. There are no core
+files to overwrite and no template files to merge.
+
+On Zen Cart 1.5.8 through 2.0.x, also upload the `includes` folder from the
+package's `for_zen_cart_1.5.8_to_2.0.x` folder. Those releases look for a
+payment module only in `includes/modules/payment`, so two small files there
+hand off to the plugin:
+
+- `includes/modules/payment/authorizenet_accept.php`
+- `includes/languages/english/modules/payment/lang.authorizenet_accept.php`
+
+Nothing in core is edited. Without them the Plugin Manager refuses the
+install and names them. From 2.1.0 on they're ignored, so they can stay
+through an upgrade.
 
 ## Step 2: Plugin Manager
 
@@ -82,3 +94,7 @@ Plugin Manager > Uninstall removes the module if you skipped that step,
 forgets the saved settings, and unregisters the plugin. The transaction table
 is kept on purpose: it holds your payment history. Drop `authorizenet_accept`
 yourself if you're sure you don't need it.
+
+On Zen Cart 1.5.8 through 2.0.x, delete the two bridge files from step 1 as
+well if you're not reinstalling. Left behind without the plugin, they only
+show a placeholder row under Modules > Payment that says what to delete.

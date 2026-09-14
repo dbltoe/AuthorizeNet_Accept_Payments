@@ -63,7 +63,8 @@ $harnesses = @(Get-ChildItem $here -Filter '*.php' |
 if ($Only) { $harnesses = @($harnesses | Where-Object { $_ -like "*$Only*" }) }
 if ($harnesses.Count -eq 0) { Write-Error "no harness matched '$Only'"; exit 2 }
 
-$shipped = @(Get-ChildItem (Join-Path $root 'zc_plugins') -Recurse -Filter '*.php' | Select-Object -ExpandProperty FullName)
+$shipped = @(Get-ChildItem (Join-Path $root 'zc_plugins') -Recurse -Filter '*.php' | Select-Object -ExpandProperty FullName) +
+           @(Get-ChildItem (Join-Path $root 'for_zen_cart_1.5.8_to_2.0.x') -Recurse -Filter '*.php' | Select-Object -ExpandProperty FullName)
 
 $noise = '(?m)^(PHP )?(Warning|Deprecated|Notice|Fatal error|Parse error|Strict Standards):'
 $problems = @()

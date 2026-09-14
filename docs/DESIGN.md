@@ -5,7 +5,7 @@ The companion Pro plugin's design lives in the Pro repo's docs/DESIGN.md.
 
 ## 1. What it is
 
-A payment module for Zen Cart 2.1.0 through 3.0.0 that takes card payments
+A payment module for Zen Cart 1.5.8 through 3.0.0 that takes card payments
 through Authorize.Net's current JSON API with Accept.js tokenization, as a
 drop-in successor to the core Authorize.net AIM module. Free, GPL-2.0, in the
 Zen Cart Plugins Library.
@@ -34,7 +34,7 @@ Why it exists (researched 2026-09-13):
 | API client | Own 300-line class, no SDK | The official PHP SDK is a Composer tree with its own opinions; the API is four request shapes. Testable with a fake transport. |
 | Key order | Every element passes through `orderKeys()` with the schema order | The JSON API validates in XML schema order; out-of-order keys fail with E00003. |
 | Transaction table | Own table `authorizenet_accept`, one row per gateway call | Richer than core's `authorizenet` table (network transaction id, AVS/CVV, masked request); does not collide with core's schema. Kept on uninstall. |
-| Version floor | Zen Cart 2.1.0 | Payment modules load from `zc_plugins` from 2.1.0 (verified absent in 1.5.8 and 2.0.0). PHP 7.4 through 8.5. |
+| Version floor | Zen Cart 1.5.8 | Payment modules load from `zc_plugins` only from 2.1.0 (verified absent in 1.5.8 and 2.0.0: the payment class, Modules > Payment and the order page all read the core folders only), so 1.5.8 through 2.0.x get two bridge files in the core folders (`for_zen_cart_1.5.8_to_2.0.x/`): a module file and a language file that hand off to the plugin's copies, preferring the version the Plugin Manager installed. The installer refuses those releases until the files are present and never writes into core folders itself; if the plugin is deleted with the bridge left behind, a placeholder class keeps Modules > Payment from fataling. From 2.1.0 the plugin's copy wins over a core file of the same name, so the bridge is inert after an upgrade. 1.5.8 is John's standard floor (set 2026-09-13). PHP 7.4 through 8.5. |
 | Config | Created by the module's `install()` under Modules > Payment | Exactly like a core payment module; the Plugin Manager installer only creates the table. |
 | No `zen_config()` | `cfg()` helper on `defined()`/`constant()` | `zen_config()` is 3.0.0 only. |
 | Settings survive Remove | `remove()` stashes all but STATUS in one configuration row; `install()` restores and deletes it; Plugin Manager uninstall forgets it | Prompted by zencart/documentation#1456 (torvista, 2026-09-13): re-installing a payment module should not mean retyping every key. Done in the module rather than in a per-site observer so every store gets it. |
@@ -56,6 +56,9 @@ zc_plugins/AuthorizeNetAccept/v1.0.0/
       AuthorizeNetAcceptLog.php              transaction table, log files
       admin_notification.php                 order-page block: history + refund / capture / void
       checkout_script.php                    the browser side
+for_zen_cart_1.5.8_to_2.0.x/                 uploaded on 1.5.8 - 2.0.x only
+  includes/modules/payment/authorizenet_accept.php                          bridge to the plugin's module
+  includes/languages/english/modules/payment/lang.authorizenet_accept.php  bridge to the plugin's language file
 ```
 
 ## 4. Checkout flow
@@ -142,9 +145,11 @@ Public helpers an add-on may call on the module object: `cfg()`, `api()`,
 
 - `tests/run_all.ps1`: lint plus every harness on PHP 7.4 through 8.5
   (manifest, installer, module, api, security scan, readme, zc_compat, js).
-- Rig: `F:\zclab\bin\link-plugin.ps1 -Copy` into zc210 / zc222 / zc230,
-  junction into zc300; install through the Plugin Manager and then Modules >
-  Payment; checkout in the Browser pane.
+- Rig: `F:\zclab\bin\link-plugin.ps1 -Copy` into zc158 / zc200 / zc210 /
+  zc222 / zc230, junction into zc300; install through the Plugin Manager and
+  then Modules > Payment; checkout in the Browser pane. On zc158 and zc200
+  copy the bridge files into the worktree first, and `git clean` them out
+  afterwards.
 - Sandbox: needs a sandbox account's three credentials. Test cards in the
   module's description. Declines: billing ZIP 46282; held for review needs
   the sandbox's fraud filters. Refund needs a settled transaction (sandbox

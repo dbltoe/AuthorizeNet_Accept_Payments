@@ -6,8 +6,9 @@ ships with Zen Cart. The customer sees the same card fields on the same
 payment page; underneath, the card number and security code are tokenized in
 the browser and never reach your server.
 
-Zen Cart 2.1.0 through 3.0.0, PHP 7.4 through 8.5, from one codebase. Free,
-GPL-2.0.
+Zen Cart 1.5.8 through 3.0.0, PHP 7.4 through 8.5, from one codebase. Free,
+GPL-2.0. On 1.5.8 through 2.0.x two small bridge files go into the core
+folders as well (docs/INSTALL.md).
 
 ## Why
 
@@ -36,7 +37,8 @@ changing what the customer sees.
 ## Install
 
 1. Upload the `zc_plugins/AuthorizeNetAccept` folder to your store's
-   `zc_plugins` directory.
+   `zc_plugins` directory. On Zen Cart 1.5.8 through 2.0.x, also upload the
+   `includes` folder from the package's `for_zen_cart_1.5.8_to_2.0.x` folder.
 2. Admin > Modules > Plugin Manager: install **Authorize.Net Accept.js
    Payments**. This creates the transaction table.
 3. Admin > Modules > Payment: install **Authorize.net (Accept.js)** and enter

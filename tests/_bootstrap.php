@@ -490,3 +490,34 @@ function ana_gateway_auth_failure_json()
         'messages' => ['resultCode' => 'Error', 'message' => [['code' => 'E00007', 'text' => 'User authentication failed due to invalid authentication values.']]],
     ]);
 }
+
+/** Recursive copy, for the harnesses that build a throwaway store root. */
+function ana_copy_tree($from, $to)
+{
+    $from = rtrim(str_replace('\\', '/', $from), '/');
+    @mkdir($to, 0777, true);
+    $it = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($from, FilesystemIterator::SKIP_DOTS), RecursiveIteratorIterator::SELF_FIRST);
+    foreach ($it as $item) {
+        $target = $to . '/' . substr(str_replace('\\', '/', $item->getPathname()), strlen($from) + 1);
+        if ($item->isDir()) {
+            @mkdir($target, 0777, true);
+        } else {
+            copy($item->getPathname(), $target);
+        }
+    }
+}
+
+/** Recursive delete of a throwaway root; refuses anything not under the temp dir with an ana_ prefix. */
+function ana_rm_tree($dir)
+{
+    $dir = rtrim(str_replace('\\', '/', $dir), '/');
+    $tmp = rtrim(str_replace('\\', '/', sys_get_temp_dir()), '/');
+    if ($dir === '' || strpos($dir, $tmp . '/ana_') !== 0 || !is_dir($dir)) {
+        return;
+    }
+    $it = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS), RecursiveIteratorIterator::CHILD_FIRST);
+    foreach ($it as $item) {
+        $item->isDir() ? @rmdir($item->getPathname()) : @unlink($item->getPathname());
+    }
+    @rmdir($dir);
+}

@@ -7,8 +7,9 @@
 | 3.0.0 (dev) | Supported | Tested from the lab's master checkout. |
 | 2.3.x | Supported | |
 | 2.2.x | Supported | The primary test bed. |
-| 2.1.0 | Supported | The earliest release that loads a payment module from a plugin. |
-| 2.0.x, 1.5.8 and earlier | Not supported | The payment class doesn't look in `zc_plugins`; the installer refuses with a message. |
+| 2.1.0 | Supported | The earliest release that loads a payment module from `zc_plugins` on its own. |
+| 2.0.x, 1.5.8 and 1.5.8a | Supported, with two bridge files | Those releases look for a payment module only in the core folders. The package's `for_zen_cart_1.5.8_to_2.0.x` folder holds a module file and a language file that hand off to the plugin; the installer refuses until they're uploaded and never writes them itself. English only: another language needs a copy of the language bridge under its own folder. |
+| 1.5.7 and earlier | Not supported | No array-style language files, and the installer refuses with a message. |
 
 One codebase for all of them: no `zen_config()`, no PHP 8-only syntax, and
 `tests/zc_compat.php` checks every `zen_*` call against real installs of each

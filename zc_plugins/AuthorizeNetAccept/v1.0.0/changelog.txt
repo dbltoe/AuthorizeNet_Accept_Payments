@@ -8,4 +8,5 @@ v1.0.0 (2026-09-13)
   receipts, duplicate-transaction window, line items, tax and shipping detail.
 - Order page: transaction history plus refund, capture and void.
 - Notifier seams for add-ons (see docs/CUSTOMIZING.md).
-- Zen Cart 2.1.0 through 3.0.0, PHP 7.4 through 8.5, from one codebase.
+- Zen Cart 1.5.8 through 3.0.0, PHP 7.4 through 8.5, from one codebase;
+  1.5.8 through 2.0.x add two bridge files in the core folders.

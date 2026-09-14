@@ -17,8 +17,8 @@ check('returns an array', is_array($manifest));
 foreach (['pluginVersion', 'pluginName', 'pluginDescription', 'pluginAuthor', 'pluginId', 'zcVersions', 'changelog', 'github_repo', 'pluginGroups'] as $key) {
     check("has $key", array_key_exists($key, $manifest));
 }
-check('declares the releases that can host a plugin payment module: v210 onward',
-    $manifest['zcVersions'] === ['v210', 'v220', 'v230', 'v300']);
+check('declares every release it runs on: v158 onward (1.5.8 - 2.0.x through the bridge files)',
+    $manifest['zcVersions'] === ['v158', 'v200', 'v210', 'v220', 'v230', 'v300']);
 check('changelog points at a file that exists', is_file($PLUGIN . '/' . $manifest['changelog']));
 check('the changelog mentions this version', strpos(file_get_contents($PLUGIN . '/' . $manifest['changelog']), $manifest['pluginVersion']) !== false);
 check('pluginVersion matches the directory: ' . $manifest['pluginVersion'], ltrim($manifest['pluginVersion'], 'v') === ltrim($version, 'v'));

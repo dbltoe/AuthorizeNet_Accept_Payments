@@ -23,11 +23,20 @@ foreach ($it as $f) {
         $files[] = str_replace('\\', '/', $f->getPathname());
     }
 }
+$BRIDGE = ana_repo_root() . '/for_zen_cart_1.5.8_to_2.0.x';
+foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($BRIDGE, FilesystemIterator::SKIP_DOTS)) as $f) {
+    if ($f->isFile()) {
+        $files[] = str_replace('\\', '/', $f->getPathname());
+    }
+}
 sort($files);
 
 function rel($path)
 {
-    global $PLUGIN;
+    global $PLUGIN, $BRIDGE;
+    if (strpos($path, $BRIDGE . '/') === 0) {
+        return basename($BRIDGE) . '/' . substr($path, strlen($BRIDGE) + 1);
+    }
     return substr($path, strlen($PLUGIN) + 1);
 }
 

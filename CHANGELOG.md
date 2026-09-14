@@ -15,4 +15,5 @@ First release.
   void that reuse Zen Cart's own order-page actions.
 - Notifier seams for add-ons (docs/CUSTOMIZING.md).
 - Works with the standard checkout and with One Page Checkout.
-- Zen Cart 2.1.0 through 3.0.0, PHP 7.4 through 8.5, from one codebase.
+- Zen Cart 1.5.8 through 3.0.0, PHP 7.4 through 8.5, from one codebase;
+  1.5.8 through 2.0.x add two bridge files in the core folders.
