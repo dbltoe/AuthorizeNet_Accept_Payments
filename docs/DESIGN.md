@@ -72,7 +72,13 @@ zc_plugins/AuthorizeNetAccept/v1.0.0/
 3. `pre_confirmation_check()` reads and validates the carriers (descriptor
    whitelist, nonce shape, owner length) and keeps them in `$paymentData`.
 4. `process_button()` re-emits them as hidden fields on the confirmation
-   page; `process_button_ajax()` maps them for the PA-DSS AJAX confirmation.
+   page. For the PA-DSS AJAX confirmation and One Page Checkout,
+   `process_button_ajax()` returns them as `extraFields` with literal values
+   (escaped for the attribute) and an empty `ccFields`: core's `ccFields`
+   copy selects by name with the payment form still on the page, matches the
+   old and the new field, reads the empty new one first and wipes the nonce.
+   Found on the pilot store's first checkout; the AJAX request already
+   carries the values, so no copy is needed.
 5. `before_process()` builds `createTransactionRequest` (auth-only or
    auth-capture; amount, currency, opaqueData, order, line items, tax,
    shipping, customer, billTo, shipTo, customerIP, transactionSettings), sends

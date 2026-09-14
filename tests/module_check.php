@@ -123,7 +123,13 @@ check('confirmation shows brand, owner, masked number and expiry', strpos($confT
 $button = $module->process_button();
 check('process_button carries the six fields and the session', substr_count($button, 'type="hidden"') === 7 && strpos($button, 'name="authorizenet_accept_value"') !== false && strpos($button, 'name="zenid"') !== false);
 $ajax = $module->process_button_ajax();
-check('process_button_ajax maps each carrier onto itself', $ajax['ccFields']['authorizenet_accept_value'] === 'authorizenet_accept_value' && count($ajax['ccFields']) === 6);
+check('process_button_ajax hands the confirmation form literal values, never a by-name copy', $ajax['ccFields'] === [] && $ajax['extraFields']['authorizenet_accept_value'] === $good['authorizenet_accept_value'] && $ajax['extraFields']['authorizenet_accept_last4'] === '0027' && $ajax['extraFields']['zenid'] === 'sess1234567890' && count($ajax['extraFields']) === 7);
+$module->paymentData = [];
+$_POST = array_merge($good, ['authorizenet_accept_owner' => 'Pat "Quote" Buyer']);
+$ajax = $module->process_button_ajax();
+check('without a prior pre_confirmation_check it reads the POST, and escapes for the value attribute', $ajax['extraFields']['authorizenet_accept_owner'] === 'Pat &quot;Quote&quot; Buyer');
+$_POST = $good;
+$module->pre_confirmation_check();
 
 section('before_process(): the request');
 ScriptedModule::$reply = ana_gateway_json(1);

@@ -450,16 +450,26 @@ class authorizenet_accept extends base
     }
 
     /**
-     * The same hand-off for the AJAX confirmation flow: each posted name is
-     * copied from the payment form's field of the same name.
+     * The same hand-off for the AJAX confirmation flow (PA-DSS AJAX checkout
+     * and One Page Checkout). The values are written into the confirmation
+     * form as literals, not copied by script: the copy core does for
+     * 'ccFields' selects by name, and with the payment form still on the page
+     * the selector matches both the old field and the new one and reads the
+     * empty new one first, wiping the nonce (found on the pilot store). The
+     * AJAX request that builds the confirmation already carries the values in
+     * its POST, and pre_confirmation_check() has validated them by the time
+     * this runs.
      */
     public function process_button_ajax()
     {
-        $ccFields = [];
+        $data = ($this->paymentData !== []) ? $this->paymentData : $this->readSubmittedPayment($_POST);
+        $extraFields = [];
         foreach (['descriptor', 'value', 'brand', 'last4', 'expires', 'owner'] as $key) {
-            $ccFields[$this->code . '_' . $key] = $this->code . '_' . $key;
+            // The template prints these into value="..." unescaped.
+            $extraFields[$this->code . '_' . $key] = zen_output_string_protected((string)($data[$key] ?? ''));
         }
-        return ['ccFields' => $ccFields, 'extraFields' => [zen_session_name() => zen_session_id()]];
+        $extraFields[zen_session_name()] = zen_session_id();
+        return ['ccFields' => [], 'extraFields' => $extraFields];
     }
 
     // -----------------------------------------------------------------
