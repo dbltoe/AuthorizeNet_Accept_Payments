@@ -907,13 +907,17 @@ class authorizenet_accept extends base
         }
         $request['refTransId'] = $transId;
         $request = AuthorizeNetAcceptApi::orderKeys($request, AuthorizeNetAcceptApi::TRANSACTION_REQUEST_ORDER);
-        $result = $this->adminTransaction((int)$oID, $request, $transId, $captureAmount, 'capture');
+        // A full capture sends no amount and the gateway echoes none back; record the authorization's.
+        $recordAmount = ($captureAmount > 0) ? $captureAmount : AuthorizeNetAcceptLog::amountForTransaction($transId);
+        $result = $this->adminTransaction((int)$oID, $request, $transId, $recordAmount, 'capture');
         $txn = $result['transaction'];
         if ($txn['responseCode'] !== AuthorizeNetAcceptApi::RESPONSE_APPROVED) {
             $messageStack->add_session($this->gatewayFailureText($result), 'error');
             return false;
         }
-        $amountText = ($captureAmount > 0) ? AuthorizeNetAcceptApi::amount($captureAmount) : 'Full Amount';
+        $amountText = ($captureAmount > 0)
+            ? AuthorizeNetAcceptApi::amount($captureAmount)
+            : 'Full Amount' . ($recordAmount > 0 ? ' (' . AuthorizeNetAcceptApi::amount($recordAmount) . ')' : '');
         $comments = 'FUNDS COLLECTED. Auth Code: ' . $txn['authCode'] . "\n"
             . 'Trans ID: ' . $txn['transId'] . "\n"
             . ' Amount: ' . $amountText . "\n"
@@ -954,7 +958,8 @@ class authorizenet_accept extends base
             'transactionType' => 'voidTransaction',
             'refTransId' => $transId,
         ], AuthorizeNetAcceptApi::TRANSACTION_REQUEST_ORDER);
-        $result = $this->adminTransaction((int)$oID, $request, $transId, 0, 'void');
+        // A void carries no amount; record the amount of what was voided.
+        $result = $this->adminTransaction((int)$oID, $request, $transId, AuthorizeNetAcceptLog::amountForTransaction($transId), 'void');
         $txn = $result['transaction'];
         if ($txn['responseCode'] !== AuthorizeNetAcceptApi::RESPONSE_APPROVED) {
             $messageStack->add_session($this->gatewayFailureText($result), 'error');

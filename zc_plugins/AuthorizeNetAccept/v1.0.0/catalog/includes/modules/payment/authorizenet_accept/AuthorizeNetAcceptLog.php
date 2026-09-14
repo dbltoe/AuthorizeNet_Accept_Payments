@@ -132,6 +132,29 @@ class AuthorizeNetAcceptLog
     }
 
     /**
+     * The amount of an approved charge or authorization by its transaction
+     * id, for recording a full capture or a void, where the gateway does not
+     * echo an amount back. 0.0 when unknown.
+     */
+    public static function amountForTransaction(string $trans_id): float
+    {
+        global $db;
+        if (!defined('TABLE_AUTHORIZENET_ACCEPT') || !is_object($db) || $trans_id === '') {
+            return 0.0;
+        }
+        $result = $db->Execute(
+            "SELECT amount
+               FROM " . TABLE_AUTHORIZENET_ACCEPT . "
+              WHERE trans_id = '" . zen_db_input($trans_id) . "'
+                AND transaction_type IN ('authOnlyTransaction', 'authCaptureTransaction')
+                AND response_code IN (1, 4)
+              ORDER BY id DESC
+              LIMIT 1"
+        );
+        return $result->EOF ? 0.0 : (float)$result->fields['amount'];
+    }
+
+    /**
      * Write a log file. Only called when the module has decided logging is on.
      * The file name carries the transaction id when there is one, so a log can
      * be matched to the Merchant Interface.

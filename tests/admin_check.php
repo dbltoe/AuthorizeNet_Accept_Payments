@@ -50,6 +50,7 @@ require $PLUGIN . '/catalog/includes/modules/payment/authorizenet_accept.php';
 $db = new AnaDb();
 $db->answers["configuration_key = 'MODULE_PAYMENT_AUTHORIZENET_ACCEPT_STATUS'"] = [['configuration_value' => 'True']];
 $db->answers["configuration_key = 'MODULE_PAYMENT_INSTALLED'"] = [['configuration_value' => 'freecharger.php;authorizenet_accept.php;cod.php']];
+$db->answers["FROM zen_authorizenet_accept WHERE trans_id = '40000012345'"] = [['amount' => '123.4500']];
 $db->answers['FROM zen_authorizenet_accept WHERE orders_id = 42'] = [
     ['id' => 1, 'transaction_type' => 'authOnlyTransaction', 'trans_id' => '40000012345', 'ref_trans_id' => '', 'response_code' => 1, 'reason_code' => '1', 'response_text' => 'This transaction has been approved.', 'auth_code' => 'ABC123', 'avs_code' => 'Y', 'cvv_code' => 'M', 'account_type' => 'Visa', 'account_number' => 'XXXX0027', 'amount' => '123.4500', 'currency' => 'USD', 'payment_source' => 'COMMON.ACCEPT.INAPP.PAYMENT', 'date_added' => '2026-09-13 10:00:00'],
     ['id' => 2, 'transaction_type' => 'voidTransaction', 'trans_id' => '40000012399', 'ref_trans_id' => '40000012345', 'response_code' => 2, 'reason_code' => '16', 'response_text' => 'The transaction cannot be found. <b>x</b>', 'auth_code' => '', 'avs_code' => 'P', 'cvv_code' => '', 'account_type' => 'Visa', 'account_number' => 'XXXX0027', 'amount' => '0.0000', 'currency' => 'USD', 'payment_source' => 'admin', 'date_added' => '2026-09-13 11:00:00'],
@@ -128,7 +129,9 @@ ScriptedAdminModule::$reply = ana_gateway_json(1, ['transId' => '40000012345']);
 check('a full capture goes through', $module->_doCapt(42, 'Complete', 123.45, 'USD') === true);
 $req = $module->lastApi->lastRequest['createTransactionRequest']['transactionRequest'];
 check('a blank amount captures the full authorization (no amount element)', array_keys($req) === ['transactionType', 'refTransId'] && $req['transactionType'] === 'priorAuthCaptureTransaction');
-check('history: funds collected, completed status', strpos(end($GLOBALS['ana_history'])['message'], 'FUNDS COLLECTED') === 0 && end($GLOBALS['ana_history'])['status'] === 2);
+check('history: funds collected with the authorization\'s amount, completed status', strpos(end($GLOBALS['ana_history'])['message'], 'FUNDS COLLECTED') === 0 && strpos(end($GLOBALS['ana_history'])['message'], 'Full Amount (123.45)') !== false && end($GLOBALS['ana_history'])['status'] === 2);
+$captRow = $db->matching("'priorAuthCaptureTransaction'");
+check('the capture row records the authorization\'s amount, not zero', count($captRow) === 1 && strpos(end($captRow), '123.45') !== false);
 $_POST['captamt'] = '100';
 $module->_doCapt(42);
 check('a typed amount is sent', $module->lastApi->lastRequest['createTransactionRequest']['transactionRequest']['amount'] === '100.00');
@@ -141,6 +144,8 @@ ScriptedAdminModule::$reply = ana_gateway_json(1, ['transId' => '40000012345']);
 check('a void goes through', $module->_doVoid(42) === true);
 $req = $module->lastApi->lastRequest['createTransactionRequest']['transactionRequest'];
 check('void request', $req === ['transactionType' => 'voidTransaction', 'refTransId' => '40000012345']);
+$voidRow = $db->matching("'voidTransaction'");
+check('the void row records the amount that was voided', count($voidRow) === 1 && strpos(end($voidRow), '123.45') !== false);
 check('history: voided, refunded status', strpos(end($GLOBALS['ana_history'])['message'], 'VOIDED') === 0 && end($GLOBALS['ana_history'])['status'] === 5);
 check('the admin-transaction notifier fired', in_array('NOTIFY_AUTHNET_ACCEPT_ADMIN_TRANSACTION', base::$events, true));
 
