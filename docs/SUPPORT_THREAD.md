@@ -1,5 +1,8 @@
 # Authorize.Net Accept.js Payments - support thread
 
+Posted by John 2026-09-13 in Addon Payment Modules as "AuthorizeNet Accept Payments":
+https://www.zen-cart.com/threads/207341?page=1#post-1347112
+
 Opening post for the Zen Cart forum support thread (Addon Payment Modules).
 Markdown; the forum also accepts it as plain text. Not part of the release
 package. Once posted, the opening-post permalink (`/threads/N?page=1#post-M`)

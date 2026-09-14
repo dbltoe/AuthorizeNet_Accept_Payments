@@ -76,7 +76,7 @@ the real sandbox is exercised from a Zen Cart install.
 ## Support
 
 Open an issue on GitHub, or post in the plugin's support thread on the Zen
-Cart forum once it exists (the link is in the Plugin Manager panel).
+Cart forum: https://www.zen-cart.com/threads/207341?page=1#post-1347112
 
 ## License
 

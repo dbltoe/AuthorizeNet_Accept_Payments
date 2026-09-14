@@ -35,7 +35,7 @@ check('readme.html exists at that path', is_file($PLUGIN . '/readme.html'));
 check('GitHub button and github_repo agree', strpos($desc, 'href="' . $manifest['github_repo'] . '"') !== false && strpos($manifest['github_repo'], 'https://github.com/dbltoe/') === 0);
 check('links open in a new tab safely', substr_count($desc, 'rel="noopener noreferrer"') >= 2);
 check('the description tells the owner the second step: Modules > Payment', strpos($desc, 'Modules &gt; Payment') !== false);
-check('no forum link is rendered while the thread does not exist', strpos($desc, 'Forum Support Thread') === false);
+check('the Forum Support Thread button links the opening-post permalink', strpos($desc, 'href="https://www.zen-cart.com/threads/207341?page=1#post-1347112"') !== false && strpos($desc, 'Forum Support Thread') !== false);
 
 section('release hygiene');
 check('pluginId is 0 until the Library assigns one, or a real id', is_int($manifest['pluginId']));

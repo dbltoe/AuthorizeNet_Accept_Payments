@@ -25,7 +25,7 @@ $anaGithubUrl = 'https://github.com/dbltoe/AuthorizeNet_Accept_Payments';
  * the first release. An empty string renders no link at all, which is better
  * than a link that 404s.
  */
-$anaForumUrl = '';
+$anaForumUrl = 'https://www.zen-cart.com/threads/207341?page=1#post-1347112';
 
 $anaGap = '6px';
 $anaLinks =

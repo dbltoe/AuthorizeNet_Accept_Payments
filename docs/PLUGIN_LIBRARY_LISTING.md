@@ -87,8 +87,7 @@ this module's notifier seams.
 ## Links
 
 - GitHub: https://github.com/dbltoe/AuthorizeNet_Accept_Payments
-- Support thread: created by John after listing; the opening-post permalink
-  goes into the manifest, the readme and here.
+- Support thread: https://www.zen-cart.com/threads/207341?page=1#post-1347112
 
 ## Version and compatibility fields
 
