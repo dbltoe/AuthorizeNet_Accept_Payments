@@ -54,7 +54,7 @@ th { background: #f0f0f0; }
 <ul>
 <li>Zen Cart 2.1.0 or later. That's the first release that can load a payment module from a plugin; on older releases the Plugin Manager refuses the install and tells you why.</li>
 <li>PHP 7.4 or later with the curl and json extensions.</li>
-<li>An Authorize.Net merchant account, or a free sandbox account for testing.</li>
+<li>A live Authorize.Net account for real payments, or a free sandbox account for testing. The live account is a paid service with a merchant account behind it; section 7 explains the two ways to get one.</li>
 <li>A store served over https. In Production mode the module hides itself on a page that isn't.</li>
 <li>The customer's browser must be able to load the Accept.js script from <code>js.authorize.net</code> (or <code>jstest.authorize.net</code> in Sandbox mode). Authorize.Net requires it to come from their host; there's no local copy.</li>
 </ul>
@@ -113,7 +113,14 @@ th { background: #f0f0f0; }
 <p>In Sandbox mode every gateway call is written to the store's logs folder as <code>authnet_accept_&lt;kind&gt;_&lt;transaction id&gt;_&lt;date&gt;.log</code>, with the transaction key and the nonce masked, so you can see exactly what went over the wire.</p>
 
 <h2 id="live">7. Going live</h2>
+<p>Real payments need a live Authorize.Net account, and the sandbox doesn't stand in for one. It's a paid service: a monthly gateway fee plus a fee on each transaction, with a merchant account behind it to settle the money into your bank. Current rates and the sign-up form are at <a href="https://www.authorize.net/sign-up/pricing.html">authorize.net/sign-up/pricing.html</a>. There are two ways in:</p>
+<ul>
+<li><strong>Gateway Only</strong>: you already have a merchant account with your bank or card processor. Authorize.Net connects to it; you pay them the gateway fees and your processor its usual rates.</li>
+<li><strong>All-in-One</strong>: Authorize.Net supplies the merchant account as well, at one blended rate per transaction.</li>
+</ul>
+<p>Many banks and merchant services providers resell Authorize.Net accounts too; one from a reseller works the same way and issues the same three credentials. There's no setup fee, and the fraud filters (section 9) are part of the gateway fee rather than an add-on.</p>
 <ol>
+<li>Log in to the live Merchant Interface at <a href="https://account.authorize.net/">account.authorize.net</a> and collect the three credentials as in section 3. They're different from the sandbox's.</li>
 <li>Switch Transaction Mode to Production.</li>
 <li>Enter the live account's API Login ID, Transaction Key and Public Client Key.</li>
 <li>Make sure the store is served over https; the module won't show itself otherwise.</li>

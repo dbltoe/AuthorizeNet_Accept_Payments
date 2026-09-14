@@ -32,6 +32,7 @@ foreach (['sandbox', 'Public Client Key', 'Transaction Key', 'API Login ID', 'Mo
     check("it covers: $needle", stripos($readme, $needle) !== false);
 }
 check('it says where the sandbox account comes from', strpos($readme, 'developer.authorize.net/hello_world/sandbox') !== false);
+check('it says a live account is paid and where to sign up', stripos($readme, 'paid service') !== false && strpos($readme, 'authorize.net/sign-up/pricing.html') !== false);
 check('it names the two SDK hosts the store owner may need to allow', strpos($readme, 'js.authorize.net') !== false && strpos($readme, 'jstest.authorize.net') !== false);
 check('American spelling', preg_match('~\b(licence|authorise|authorised|colour|cancelled)\b~i', $readme) === 0);
 check('it uses contractions rather than stiff prose', preg_match_all("~\\b(doesn't|isn't|can't|won't|you'll|it's|don't|aren't)\\b~", $readme) >= 4);

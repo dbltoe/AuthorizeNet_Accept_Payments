@@ -5,8 +5,10 @@
 - Zen Cart 2.1.0 or later. Earlier releases can't load a payment module
   from a plugin; the Plugin Manager will refuse the install and say so.
 - PHP 7.4 or later with the curl and json extensions (every host has them).
-- An Authorize.Net merchant account, or a free sandbox account for testing:
-  https://developer.authorize.net/hello_world/sandbox.html
+- A live Authorize.Net account for real payments, or a free sandbox account
+  for testing: https://developer.authorize.net/hello_world/sandbox.html
+  The live account is a paid service (a monthly gateway fee plus a fee per
+  transaction) with a merchant account behind it; see "Going live" below.
 - Your store served over https. In Production mode the module hides itself
   on a page that isn't.
 
@@ -49,9 +51,19 @@ are at the bottom of the order page.
 
 ## Going live
 
-Switch Transaction Mode to Production and enter the live account's three
-credentials. Consider a small real purchase, then void it from the order page
-before the daily settlement.
+Real payments need a live Authorize.Net account, and the sandbox doesn't
+stand in for one. It's a paid service: a monthly gateway fee plus a fee on
+each transaction, with a merchant account behind it to settle the money into
+your bank. Current rates and the sign-up form are at
+https://www.authorize.net/sign-up/pricing.html. Choose Gateway Only if you
+already have a merchant account with your bank or card processor, or
+All-in-One if you want Authorize.Net to supply that too. Accounts resold by
+banks and merchant services providers work the same way.
+
+Collect the live account's three credentials from account.authorize.net (they
+differ from the sandbox's), switch Transaction Mode to Production and enter
+them. Consider a small real purchase, then void it from the order page before
+the daily settlement.
 
 ## Moving from the AIM module
 

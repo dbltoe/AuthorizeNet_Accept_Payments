@@ -1060,7 +1060,11 @@ class authorizenet_accept extends base
         $this->installKey('API Login ID', 'LOGIN', '', 'The API Login ID from the Merchant Interface (Account &gt; Settings &gt; API Credentials &amp; Keys). Use the sandbox account\'s when Transaction Mode is Sandbox.', 1);
         $this->installKey('Transaction Key', 'TXNKEY', '', 'The Transaction Key from the same page. Generating a new one there invalidates the old one within 24 hours.', 2, null, 'zen_cfg_password_display');
         $this->installKey('Public Client Key', 'CLIENT_KEY', '', 'The Public Client Key (Account &gt; Settings &gt; Manage Public Client Key). It is sent to the browser and is safe to expose; it cannot be used to run transactions.', 3);
-        $this->installKey('Transaction Mode', 'TESTMODE', 'Sandbox', 'Where transactions go.<br><strong>Sandbox</strong> = the Authorize.net sandbox, with sandbox credentials; nothing is charged.<br><strong>Test</strong> = your live account with every request flagged as a test; nothing is charged.<br><strong>Production</strong> = live processing.', 4, "zen_cfg_select_option(array('Sandbox', 'Test', 'Production'), ");
+        $this->installKey('Transaction Mode', 'TESTMODE', 'Sandbox',
+            'Where transactions go.<br><strong>Sandbox</strong> = the Authorize.net sandbox, with sandbox credentials; nothing is charged.<br>'
+            . '<strong>Test</strong> = your live account with every request flagged as a test; nothing is charged.<br>'
+            . '<strong>Production</strong> = live processing through a paid Authorize.net account (monthly gateway fee plus per-transaction fees) with a merchant account behind it.',
+            4, "zen_cfg_select_option(array('Sandbox', 'Test', 'Production'), ");
         $this->installKey('Authorization Type', 'AUTHORIZATION_TYPE', 'Authorize+Capture', 'Authorize+Capture charges the card at checkout. Authorize only reserves the funds; capture them from the order page.', 5, "zen_cfg_select_option(array('Authorize+Capture', 'Authorize'), ");
         $this->installKey('Request CVV Number', 'USE_CVV', 'True', 'Ask the customer for the card\'s security code? Strongly recommended.', 6, "zen_cfg_select_option(array('True', 'False'), ");
         $this->installKey('Currency Supported', 'CURRENCY', 'USD', 'Which currency is your Authorize.net account configured to accept? Purchases in any other currency are converted to it, using your store\'s exchange rates, before submission.', 7, "zen_cfg_select_option(array('USD', 'CAD', 'GBP', 'EUR', 'AUD', 'NZD'), ");

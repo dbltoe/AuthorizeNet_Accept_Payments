@@ -8,7 +8,7 @@ All settings are under Admin > Modules > Payment > Authorize.net (Accept.js).
 | API Login ID | (blank) | From the Merchant Interface, Account > Settings > API Credentials & Keys. Use the sandbox account's when Transaction Mode is Sandbox. |
 | Transaction Key | (blank) | From the same page. Stored with the password display; never sent to the browser. |
 | Public Client Key | (blank) | Account > Settings > Manage Public Client Key. Sent to the browser for Accept.js; it can't be used to run transactions. |
-| Transaction Mode | Sandbox | Sandbox: the Authorize.Net sandbox, with sandbox credentials, nothing charged. Test: your live account with every request flagged as a test, nothing charged. Production: live processing. |
+| Transaction Mode | Sandbox | Sandbox: the Authorize.Net sandbox, with sandbox credentials, nothing charged. Test: your live account with every request flagged as a test, nothing charged. Production: live processing through a paid Authorize.Net account (monthly gateway fee plus per-transaction fees) with a merchant account behind it; see INSTALL.md, "Going live". |
 | Authorization Type | Authorize+Capture | Authorize+Capture charges the card at checkout. Authorize reserves the funds; capture them from the order page within 30 days. |
 | Request CVV Number | True | Ask for the card's security code. Keep it on. |
 | Currency Supported | USD | The currency your Authorize.Net account settles in. Orders in another currency are converted with your store's exchange rates before submission; tax, shipping and line items are then omitted because they wouldn't add up. |

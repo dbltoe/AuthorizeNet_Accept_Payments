@@ -109,7 +109,8 @@ $define = [
 $anaTestMode = defined('MODULE_PAYMENT_AUTHORIZENET_ACCEPT_TESTMODE') ? MODULE_PAYMENT_AUTHORIZENET_ACCEPT_TESTMODE : 'Sandbox';
 $anaLinks = '<a rel="noreferrer noopener" target="_blank" href="https://account.authorize.net/">Authorize.net Merchant Login</a>'
     . ' | <a rel="noreferrer noopener" target="_blank" href="https://sandbox.authorize.net/">Sandbox Login</a>'
-    . ' | <a rel="noreferrer noopener" target="_blank" href="https://developer.authorize.net/hello_world/sandbox.html">Create a Sandbox Account</a>';
+    . ' | <a rel="noreferrer noopener" target="_blank" href="https://developer.authorize.net/hello_world/sandbox.html">Create a Sandbox Account</a>'
+    . ' | <a rel="noreferrer noopener" target="_blank" href="https://www.authorize.net/sign-up/pricing.html">Live Account Pricing &amp; Sign-up</a>';
 $anaCredentials = '<br><br><strong>Where the three credentials come from</strong> (Merchant Interface, or the sandbox\'s): '
     . 'Account &gt; Settings &gt; Security Settings &gt; General Security Settings &gt; <strong>API Credentials &amp; Keys</strong> for the API Login ID and a Transaction Key, '
     . 'and <strong>Manage Public Client Key</strong> on the same page for the Public Client Key that Accept.js uses in the browser.';
@@ -124,7 +125,7 @@ if (defined('MODULE_PAYMENT_AUTHORIZENET_ACCEPT_STATUS') && MODULE_PAYMENT_AUTHO
 } else {
     $define['MODULE_PAYMENT_AUTHORIZENET_ACCEPT_TEXT_DESCRIPTION'] = $anaLinks
         . '<br><br><strong>Requirements:</strong><hr>'
-        . '* An <strong>Authorize.net merchant account</strong> (or a sandbox account for testing)<br>'
+        . '* A live <strong>Authorize.net account</strong> for real payments: a paid service (monthly gateway fee plus a fee per transaction) with a merchant account behind it, either your own (Gateway Only) or theirs (All-in-One). A sandbox account is free for testing but can\'t take real money.<br>'
         . '* <strong>CURL</strong> compiled with SSL support into PHP<br>'
         . '* Your <strong>API Login ID, Transaction Key and Public Client Key</strong> from the Merchant Interface'
         . $anaCredentials
