@@ -688,8 +688,18 @@ class authorizenet_accept extends base
     protected function nextInvoiceNumber(): string
     {
         global $db;
-        $last = $db->Execute("SELECT orders_id FROM " . TABLE_ORDERS . " ORDER BY orders_id DESC LIMIT 1");
-        $next = (int)($last->fields['orders_id'] ?? 0) + 1;
+        // The table's own counter is right even when old orders have been
+        // deleted (an empty table with the counter at 27 gave "1" on the pilot
+        // store); highest id plus one is the fallback.
+        $next = 0;
+        $status = $db->Execute("SHOW TABLE STATUS LIKE '" . zen_db_input(TABLE_ORDERS) . "'");
+        if (!$status->EOF && !empty($status->fields['Auto_increment'])) {
+            $next = (int)$status->fields['Auto_increment'];
+        }
+        if ($next <= 0) {
+            $last = $db->Execute("SELECT orders_id FROM " . TABLE_ORDERS . " ORDER BY orders_id DESC LIMIT 1");
+            $next = (int)($last->fields['orders_id'] ?? 0) + 1;
+        }
         $prefix = '';
         if ($this->cfg('TESTMODE') === 'Test') {
             $prefix = 'TEST-';
