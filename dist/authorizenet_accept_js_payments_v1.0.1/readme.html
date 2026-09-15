@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Authorize.Net Accept.js Payments v1.0.0 - Read Me</title>
+<title>Authorize.Net Accept.js Payments v1.0.1 - Read Me</title>
 <style>
 body { font: 15px/1.5 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: #222; background: #fff; margin: 0; padding: 24px; max-width: 900px; }
 h1 { font-size: 26px; margin: 0 0 4px; }
@@ -22,7 +22,7 @@ th { background: #f0f0f0; }
 </head>
 <body>
 <h1>Authorize.Net Accept.js Payments</h1>
-<p class="version">Version 1.0.0 for Zen Cart 1.5.8 through 3.0.0. By My Zen Cart Host (dbltoe). GPL-2.0.</p>
+<p class="version">Version 1.0.1 for Zen Cart 1.5.8 through 3.0.0. By My Zen Cart Host (dbltoe). GPL-2.0.</p>
 
 <p>Card payments through Authorize.Net's current JSON API with Accept.js tokenization: the card number and security code are tokenized in the customer's browser and never posted to your store. It's a drop-in successor to the Authorize.net AIM module that ships with Zen Cart, with the same card fields on the same payment page, plus a transaction history and refund, capture and void tools on the order page.</p>
 
@@ -71,7 +71,7 @@ th { background: #f0f0f0; }
 
 <h2 id="install">4. Installing</h2>
 <ol>
-<li>Upload the <code>zc_plugins/AuthorizeNetAccept</code> folder into your store's <code>zc_plugins</code> directory, so that <code>zc_plugins/AuthorizeNetAccept/v1.0.0/manifest.php</code> exists. On Zen Cart 2.1.0 and later nothing else needs uploading; no core file is changed.</li>
+<li>Upload the <code>zc_plugins/AuthorizeNetAccept</code> folder into your store's <code>zc_plugins</code> directory, so that <code>zc_plugins/AuthorizeNetAccept/v1.0.1/manifest.php</code> exists. On Zen Cart 2.1.0 and later nothing else needs uploading; no core file is changed.</li>
 <li><strong>Zen Cart 1.5.8 through 2.0.x only:</strong> also upload the <code>includes</code> folder from the package's <code>for_zen_cart_1.5.8_to_2.0.x</code> folder. It adds two files, <code>includes/modules/payment/authorizenet_accept.php</code> and <code>includes/languages/english/modules/payment/lang.authorizenet_accept.php</code>, that hand off to the plugin; nothing in core is edited. On 2.1.0 and later they're ignored, so they can stay through an upgrade.</li>
 <li>Admin &gt; Modules &gt; Plugin Manager: install <strong>Authorize.Net Accept.js Payments</strong>. This creates the transaction table.</li>
 <li>Admin &gt; Modules &gt; Payment: install <strong>Authorize.net (Accept.js)</strong>, click Edit, enter the three credentials, and choose the Transaction Mode.</li>
@@ -185,7 +185,7 @@ th { background: #f0f0f0; }
 <p>On Zen Cart 1.5.8 through 2.0.x, also delete the two bridge files from section 4 if you're not going to reinstall. Left behind without the plugin, they only show a placeholder row under Modules &gt; Payment that says what to delete.</p>
 
 <h2 id="developers">16. For developers</h2>
-<p>The module fires notifier events at every seam (the payment block, the descriptor whitelist, the request before it's sent, the result after) so an add-on can take a wallet token or a stored payment profile through the same path without editing the module. The list, with parameters and an example observer, is in <code>docs/CUSTOMIZING.md</code> in the package; the design notes are in <code>docs/DESIGN.md</code>.</p>
+<p>The module fires notifier events at every seam (the payment block, the descriptor whitelist, the request before it's sent, the result after) so an add-on can take a wallet token or a stored payment profile through the same path without editing the module. In the browser, an add-on hands a wallet token to <code>window.authorizenet_accept.setWalletToken()</code> and the checkout script does the rest: it fills the hidden fields, selects the module, keeps the token through a One Page Checkout re-render, and lets the order through without asking for a card. The list, with parameters and an example observer, is in <code>docs/CUSTOMIZING.md</code> in the package; the design notes are in <code>docs/DESIGN.md</code>.</p>
 
 <h2 id="support">17. Support and license</h2>
 <p>Support: <a href="https://www.zen-cart.com/threads/207341?page=1#post-1347112">the plugin's thread on the Zen Cart forum</a> or the GitHub repository at <a href="https://github.com/dbltoe/AuthorizeNet_Accept_Payments">github.com/dbltoe/AuthorizeNet_Accept_Payments</a>.</p>

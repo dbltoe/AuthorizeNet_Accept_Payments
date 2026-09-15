@@ -1,5 +1,15 @@
 Authorize.Net Accept.js Payments -- changelog
 
+v1.0.1 (2026-09-15)
+- Wallet hook in the checkout script (window.authorizenet_accept.setWalletToken())
+  so Apple Pay, Google Pay and other add-ons can hand over a token: the script
+  fills the hidden fields, selects the module, keeps the token through a One
+  Page Checkout re-render, and lets the order through without asking for a
+  card. 1.0.0 only let its own nonce through.
+- Script config carries the order total, currency, mode and the Accept
+  descriptor; an authorizenet_accept:ready event fires on each render.
+- Nothing changes for card payments.
+
 v1.0.0 (2026-09-13)
 - First release.
 - Card payments through Authorize.Net's JSON API (createTransactionRequest) with

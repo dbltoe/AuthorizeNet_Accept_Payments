@@ -26,13 +26,15 @@ require_once __DIR__ . '/authorizenet_accept/AuthorizeNetAcceptLog.php';
 
 class authorizenet_accept extends base
 {
-    const VERSION = '1.0.0';
+    const VERSION = '1.0.1';
     const CONFIG_PREFIX = 'MODULE_PAYMENT_AUTHORIZENET_ACCEPT_';
     const CONFIG_GROUP_ID = 6;
     const SCRIPT_SANDBOX = 'https://jstest.authorize.net/v1/Accept.js';
     const SCRIPT_PRODUCTION = 'https://js.authorize.net/v1/Accept.js';
     /** Re-tokenize after this long; Accept.js nonces live 15 minutes. */
     const TOKEN_TTL_MS = 600000;
+    /** A wallet token handed to the checkout script is kept (in sessionStorage) this long, so it survives a One Page Checkout re-render. */
+    const WALLET_TTL_MS = 900000;
     /** Buttons the checkout script intercepts: Zen Cart's Continue, and One Page Checkout's Review / Confirm. */
     const SUBMIT_SELECTOR = '#paymentSubmit input[type="submit"], #paymentSubmit input[type="image"], #paymentSubmit button, #opc-order-confirm, #opc-order-review, #checkoutOneSubmit';
     /** Where the settings wait between a Remove and a re-Install under Modules > Payment. */
@@ -342,6 +344,13 @@ class authorizenet_accept extends base
             'zip' => (string)($order->billing['postcode'] ?? ''),
             'tokenTtlMs' => self::TOKEN_TTL_MS,
             'submitSelector' => self::SUBMIT_SELECTOR,
+            // For add-ons that hand over a wallet token (see docs/CUSTOMIZING.md).
+            'acceptDescriptor' => AuthorizeNetAcceptApi::DESCRIPTOR_ACCEPT,
+            'walletStorageKey' => $this->code . '_wallet',
+            'walletTtlMs' => self::WALLET_TTL_MS,
+            'total' => number_format((float)($order->info['total'] ?? 0), 2, '.', ''),
+            'currency' => (string)($order->info['currency'] ?? ''),
+            'sandbox' => $this->isSandbox(),
             'text' => [
                 'owner' => MODULE_PAYMENT_AUTHORIZENET_ACCEPT_TEXT_JS_CC_OWNER,
                 'number' => MODULE_PAYMENT_AUTHORIZENET_ACCEPT_TEXT_JS_CC_NUMBER,

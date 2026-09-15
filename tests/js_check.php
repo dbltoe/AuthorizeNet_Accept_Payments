@@ -24,6 +24,12 @@ $anaScriptConfig = [
     'zip' => '78701',
     'tokenTtlMs' => 600000,
     'submitSelector' => '#paymentSubmit input[type="submit"], #opc-order-confirm',
+    'acceptDescriptor' => 'COMMON.ACCEPT.INAPP.PAYMENT',
+    'walletStorageKey' => 'authorizenet_accept_wallet',
+    'walletTtlMs' => 900000,
+    'total' => '12.34',
+    'currency' => 'USD',
+    'sandbox' => true,
     'text' => ['owner' => "It's the owner", 'number' => 'n', 'expires' => 'e', 'cvv' => 'c', 'working' => 'w', 'failed' => 'f', 'loadFailed' => 'l'],
 ];
 ob_start();
@@ -63,11 +69,27 @@ check('the SDK is loaded on demand with the utf-8 charset and a marker', strpos(
 check('the SDK load times out rather than hanging', strpos($js, 'waited >= 15000') !== false);
 check('a hidden radio (single module) counts as selected', strpos($js, "radio.type === 'hidden' || radio.checked === true") !== false);
 check('local validation: Luhn, expiry, CVV length', strpos($js, 'function luhnOk') !== false && strpos($js, 'card.number.length < 13') !== false && strpos($js, 'card.cvv.length < 3') !== false);
-check('the nonce and only the card summary go into the carriers', substr_count($js, 'setHidden(code + \'_') === 7 && strpos($js, "setHidden(code + '_value', response.opaqueData.dataValue)") !== false);
+check('the nonce and only the card summary go into the carriers (5 on tokenize, 2 on clear, 5 on a wallet token, 5 on clearing one)', substr_count($js, 'setHidden(code + \'_') === 17 && strpos($js, "setHidden(code + '_value', response.opaqueData.dataValue)") !== false);
 check('editing the card clears the nonce', strpos($js, "el.addEventListener('input', clearToken)") !== false);
 check('an old nonce is refreshed', strpos($js, 'cfg.tokenTtlMs') !== false);
 check('errors are shown with textContent, never innerHTML', strpos($js, 'box.textContent') !== false && strpos($js, 'innerHTML') === false);
 check('no eval, no Function constructor, no console', preg_match('~\beval\(|new Function\(|console\.~', $js) === 0);
 check('the re-issued click is the same control', strpos($js, 'control.click();') !== false);
+
+section('the wallet hook (1.0.1)');
+check('a wallet token in the carriers lets the click through untouched', strpos($js, 'if (fresh || walletTokenPresent()) {') !== false);
+check('only a non-Accept descriptor with a value counts as a wallet token', strpos($js, "descriptor !== '' && descriptor !== acceptDescriptor && carrier('value') !== ''") !== false);
+check('the public API is one object under the module code, and nothing else is global', preg_match_all('~\bwindow\[[^\]]+\]\s*=|\bwindow\.[a-zA-Z_]+\s*=~', $js, $globals) === 1 && $globals[0][0] === 'window[code] =');
+foreach (['setWalletToken', 'clearWalletToken', 'hasWalletToken', 'select', 'config'] as $method) {
+    check("API method $method", preg_match('~\b' . $method . ':\s*(function|[a-zA-Z]+)~', $js) === 1);
+}
+check('setWalletToken refuses the Accept descriptor and empty values', strpos($js, "if (!descriptor || !value || String(descriptor) === acceptDescriptor) {") !== false);
+check('the token is kept in sessionStorage keyed to the order total, with a lifetime', strpos($js, 'window.sessionStorage.setItem(walletKey') !== false && strpos($js, "String(token.total) !== String(cfg.total)") !== false && strpos($js, '(Date.now() - token.at) > walletTtl') !== false);
+check('a stored token is restored on each render (One Page Checkout redraws the block)', strpos($js, 'var stored = readStoredWallet();') !== false && strpos($js, 'applyWallet(stored);') !== false);
+check('selecting the module is a real radio click, for OPC', strpos($js, 'radio.click();') !== false);
+check('card edits, another payment method, and a submit all drop the wallet token', strpos($js, 'forgetWallet();') !== false && strpos($js, "target.name === 'payment' && target.value !== code") !== false && strpos($js, "form.name === 'checkout_payment' || form.name === 'checkout_confirmation'") !== false);
+check('an Accept.js tokenization replaces any wallet token', preg_match('~forgetWallet\(\);\s*setHidden\(code \+ \'_descriptor\', response\.opaqueData\.dataDescriptor\)~', $js) === 1);
+check('each render announces itself with a ready event carrying the API', strpos($js, "new CustomEvent(code + ':ready', { detail: api })") !== false);
+check('config() exposes only what a wallet needs: code, total, currency, sandbox', strpos($js, 'return { code: code, total: cfg.total, currency: cfg.currency, sandbox: !!cfg.sandbox };') !== false);
 
 ana_done('checkout script is sound');

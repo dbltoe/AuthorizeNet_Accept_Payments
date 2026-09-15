@@ -16,7 +16,7 @@
  * @license  https://www.gnu.org/licenses/old-licenses/gpl-2.0.html GNU Public License V2.0
  */
 
-$anaPluginDir = 'zc_plugins/AuthorizeNetAccept/v1.0.0/';
+$anaPluginDir = 'zc_plugins/AuthorizeNetAccept/v1.0.1/';
 $anaReadmeUrl = (defined('DIR_WS_CATALOG') ? DIR_WS_CATALOG : '/') . $anaPluginDir . 'readme.html';
 $anaGithubUrl = 'https://github.com/dbltoe/AuthorizeNet_Accept_Payments';
 
@@ -41,7 +41,7 @@ $anaLinks =
     . '</div>';
 
 return [
-    'pluginVersion' => 'v1.0.0',
+    'pluginVersion' => 'v1.0.1',
     'pluginName' => 'Authorize.Net Accept.js Payments',
     'pluginDescription' =>
         'Credit card payments through Authorize.Net\'s current JSON API with Accept.js tokenization, '

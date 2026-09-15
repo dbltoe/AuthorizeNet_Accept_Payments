@@ -37,6 +37,42 @@ The observer receives the module as `$class`.
   payment."); set it in `NOTIFY_AUTHNET_ACCEPT_BEFORE_TRANSACTION` to name
   another source.
 
+## The browser side: handing over a wallet token (1.0.1)
+
+The checkout script owns the hidden carriers. Don't write them yourself;
+hand the token to the script and it does the rest:
+
+```js
+window.authorizenet_accept.setWalletToken(
+    'COMMON.GOOGLE.INAPP.PAYMENT',   // a descriptor your observer allowed
+    base64Token,                     // the token, exactly as the gateway wants it
+    { brand: 'Google Pay', last4: '', expires: '' }   // optional summary; select: false skips the radio click
+);
+```
+
+What that does: fills the descriptor, value and summary carriers; selects
+the module with a real radio click, so One Page Checkout's own handler
+records the choice; keeps the token in sessionStorage for 15 minutes, tied
+to the order total, and puts it back when OPC re-renders the payment block;
+and from then on lets Continue, Review and Confirm through untouched, with no
+card validation and no Accept.js call. The token is dropped when the customer
+edits the card fields, picks another payment method, or submits the form.
+
+Also on the object: `clearWalletToken()`, `hasWalletToken()`, `select()`,
+and `config()`, which returns `{code, total, currency, sandbox}` so a wallet
+sheet can be built for the same amount the module will charge. Because OPC
+re-renders the payment block, listen for the render rather than the page:
+
+```js
+document.addEventListener('authorizenet_accept:ready', function (event) {
+    var api = event.detail;              // the same object as window.authorizenet_accept
+    // draw your button next to the card fields; call api.setWalletToken() when the wallet answers
+});
+```
+
+The event fires on every render, including the first, so the button comes
+back after OPC redraws the block.
+
 ## Example: a wallet token instead of a card
 
 ```php

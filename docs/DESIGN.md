@@ -37,12 +37,13 @@ Why it exists (researched 2026-09-13):
 | Version floor | Zen Cart 1.5.8 | Payment modules load from `zc_plugins` only from 2.1.0 (verified absent in 1.5.8 and 2.0.0: the payment class, Modules > Payment and the order page all read the core folders only), so 1.5.8 through 2.0.x get two bridge files in the core folders (`for_zen_cart_1.5.8_to_2.0.x/`): a module file and a language file that hand off to the plugin's copies, preferring the version the Plugin Manager installed. The installer refuses those releases until the files are present and never writes into core folders itself; if the plugin is deleted with the bridge left behind, a placeholder class keeps Modules > Payment from fataling. From 2.1.0 the plugin's copy wins over a core file of the same name, so the bridge is inert after an upgrade. 1.5.8 is John's standard floor (set 2026-09-13). PHP 7.4 through 8.5. |
 | Config | Created by the module's `install()` under Modules > Payment | Exactly like a core payment module; the Plugin Manager installer only creates the table. |
 | No `zen_config()` | `cfg()` helper on `defined()`/`constant()` | `zen_config()` is 3.0.0 only. |
+| Wallet hook (1.0.1) | The checkout script owns the hidden carriers for everyone: `window.authorizenet_accept.setWalletToken(descriptor, value, meta)` writes a wallet token into them, selects the module (a real radio click, so One Page Checkout records it), keeps the token in sessionStorage for 15 minutes keyed to the order total, restores it when OPC re-renders the block, and lets the submit click through without card validation or an Accept.js call. Card edits, choosing another method, or submitting the form drop it. Each render dispatches `authorizenet_accept:ready` on the document with the API. | Found through a forum member's Google Pay add-on (2026-09-15): the 1.0.0 interceptor only let its own Accept.js nonce through, so a wallet token in the carriers was blocked on the standard checkout with the card-number message. The Pro's wallets and any third-party add-on need one sanctioned way in. |
 | Settings survive Remove | `remove()` stashes all but STATUS in one configuration row; `install()` restores and deletes it; Plugin Manager uninstall forgets it | Prompted by zencart/documentation#1456 (torvista, 2026-09-13): re-installing a payment module should not mean retyping every key. Done in the module rather than in a per-site observer so every store gets it. |
 
 ## 3. File map
 
 ```
-zc_plugins/AuthorizeNetAccept/v1.0.0/
+zc_plugins/AuthorizeNetAccept/v1.0.1/
   manifest.php                               Plugin Manager panel (Read Me / GitHub / forum buttons)
   readme.html                                the store owner's manual, served from zc_plugins
   changelog.txt

@@ -16,7 +16,7 @@
 
 Upload the `zc_plugins/AuthorizeNetAccept` folder from the package into your
 store's `zc_plugins` directory, so that you have
-`zc_plugins/AuthorizeNetAccept/v1.0.0/manifest.php`.
+`zc_plugins/AuthorizeNetAccept/v1.0.1/manifest.php`.
 
 On Zen Cart 2.1.0 and later nothing else needs uploading. There are no core
 files to overwrite and no template files to merge.
