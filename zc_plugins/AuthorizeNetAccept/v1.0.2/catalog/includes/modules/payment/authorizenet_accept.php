@@ -26,7 +26,7 @@ require_once __DIR__ . '/authorizenet_accept/AuthorizeNetAcceptLog.php';
 
 class authorizenet_accept extends base
 {
-    const VERSION = '1.0.1';
+    const VERSION = '1.0.2';
     const CONFIG_PREFIX = 'MODULE_PAYMENT_AUTHORIZENET_ACCEPT_';
     const CONFIG_GROUP_ID = 6;
     const SCRIPT_SANDBOX = 'https://jstest.authorize.net/v1/Accept.js';
@@ -697,18 +697,16 @@ class authorizenet_accept extends base
     protected function nextInvoiceNumber(): string
     {
         global $db;
-        // The table's own counter is right even when old orders have been
-        // deleted (an empty table with the counter at 27 gave "1" on the pilot
-        // store); highest id plus one is the fallback.
-        $next = 0;
-        $status = $db->Execute("SHOW TABLE STATUS LIKE '" . zen_db_input(TABLE_ORDERS) . "'");
-        if (!$status->EOF && !empty($status->fields['Auto_increment'])) {
-            $next = (int)$status->fields['Auto_increment'];
-        }
-        if ($next <= 0) {
-            $last = $db->Execute("SELECT orders_id FROM " . TABLE_ORDERS . " ORDER BY orders_id DESC LIMIT 1");
-            $next = (int)($last->fields['orders_id'] ?? 0) + 1;
-        }
+        // The next order number, predicted the way core's AIM module does it:
+        // the highest id plus one. 1.0.0 and 1.0.1 read the table's counter from
+        // SHOW TABLE STATUS instead, and on MySQL 8.0 and later that value comes
+        // from the information_schema statistics cache, refreshed once a day by
+        // default (information_schema_stats_expiry), so the same base number
+        // repeated across a day's orders. MariaDB reads it live, which is why
+        // it never showed on our own stores. The random suffix keeps every
+        // invoice unique whichever number this is.
+        $last = $db->Execute("SELECT orders_id FROM " . TABLE_ORDERS . " ORDER BY orders_id DESC LIMIT 1");
+        $next = (int)($last->fields['orders_id'] ?? 0) + 1;
         $prefix = '';
         if ($this->cfg('TESTMODE') === 'Test') {
             $prefix = 'TEST-';

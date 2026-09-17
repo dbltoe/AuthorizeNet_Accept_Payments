@@ -91,7 +91,7 @@ this module's notifier seams.
 
 ## Version and compatibility fields
 
-- Version: v1.0.1
+- Version: v1.0.2
 - Zen Cart versions: v158, v200, v210, v220, v230, v300
 - PHP: 7.4 through 8.5
 - License: GPL-2.0

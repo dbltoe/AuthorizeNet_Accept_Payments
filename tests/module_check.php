@@ -14,8 +14,8 @@ $PLUGIN = ana_plugin_dir();
 require $PLUGIN . '/catalog/includes/modules/payment/authorizenet_accept.php';
 
 $db = new AnaDb();
-$db->answers["SHOW TABLE STATUS LIKE 'zen_orders'"] = [['Auto_increment' => 42]];
-$db->answers['SELECT orders_id FROM zen_orders'] = [['orders_id' => 20]]; // stale on purpose: the counter must win
+$db->answers["SHOW TABLE STATUS LIKE 'zen_orders'"] = [['Auto_increment' => 42]]; // must never be asked: MySQL 8 serves it from a 24-hour cache (1.0.2)
+$db->answers['SELECT orders_id FROM zen_orders'] = [['orders_id' => 20]];
 $messageStack = new AnaMessageStack();
 $zcDate = new AnaDate();
 $currencies = new class {
@@ -142,8 +142,8 @@ check('auth+capture by default', $req['transactionType'] === 'authCaptureTransac
 check('keys are in schema order', array_keys($req) === ['transactionType', 'amount', 'currencyCode', 'payment', 'order', 'lineItems', 'tax', 'shipping', 'customer', 'billTo', 'shipTo', 'customerIP', 'transactionSettings']);
 check('amount is the order total as a string', $req['amount'] === '123.45' && $req['currencyCode'] === 'USD');
 check('the nonce rides in opaqueData', $req['payment']['opaqueData'] === ['dataDescriptor' => 'COMMON.ACCEPT.INAPP.PAYMENT', 'dataValue' => $good['authorizenet_accept_value']]);
-check('invoice is SANDBOX-<the table counter>-<4 chars> and under 20 chars', preg_match('~^SANDBOX-42-[A-F0-9]{4}$~', $req['order']['invoiceNumber']) === 1 && strlen($sent['createTransactionRequest']['refId']) <= 20);
-check('the counter query names the orders table, escaped', count($db->matching("SHOW TABLE STATUS LIKE 'zen_orders'")) >= 1);
+check('invoice is SANDBOX-<highest order id + 1>-<4 chars> and under 20 chars', preg_match('~^SANDBOX-21-[A-F0-9]{4}$~', $req['order']['invoiceNumber']) === 1 && strlen($sent['createTransactionRequest']['refId']) <= 20);
+check('the next order number comes from ORDER BY orders_id DESC LIMIT 1 on the prefixed table, never from SHOW TABLE STATUS (a 24-hour cache on MySQL 8)', count($db->matching('SELECT orders_id FROM zen_orders ORDER BY orders_id DESC LIMIT 1')) >= 1 && count($db->matching('SHOW TABLE STATUS')) === 0);
 check('description lists the products', strpos($req['order']['description'], 'A widget') !== false && strpos($req['order']['description'], '(qty: 2)') !== false);
 check('line items: model or id, name cut to 31, attributes as description, taxable flag', $req['lineItems']['lineItem'][0]['itemId'] === 'WIDGET-1' && strlen($req['lineItems']['lineItem'][0]['name']) === 31 && $req['lineItems']['lineItem'][0]['description'] === 'Color: Blue' && $req['lineItems']['lineItem'][0]['taxable'] === 'true' && $req['lineItems']['lineItem'][1]['itemId'] === '13' && $req['lineItems']['lineItem'][1]['taxable'] === 'false');
 check('line item keys are in schema order', array_keys($req['lineItems']['lineItem'][0]) === ['itemId', 'name', 'description', 'quantity', 'unitPrice', 'taxable']);

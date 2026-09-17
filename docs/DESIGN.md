@@ -43,7 +43,7 @@ Why it exists (researched 2026-09-13):
 ## 3. File map
 
 ```
-zc_plugins/AuthorizeNetAccept/v1.0.1/
+zc_plugins/AuthorizeNetAccept/v1.0.2/
   manifest.php                               Plugin Manager panel (Read Me / GitHub / forum buttons)
   readme.html                                the store owner's manual, served from zc_plugins
   changelog.txt

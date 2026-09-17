@@ -10,7 +10,7 @@ goes into the manifest, the readme and the Library listing.
 
 ---
 
-**Authorize.Net Accept.js Payments v1.0.1** - card payments through Authorize.Net's current JSON API with Accept.js tokenization, as a drop-in successor to the AIM module
+**Authorize.Net Accept.js Payments v1.0.2** - card payments through Authorize.Net's current JSON API with Accept.js tokenization, as a drop-in successor to the AIM module
 
 **Plugins Library:** (link once listed)
 **GitHub:** https://github.com/dbltoe/AuthorizeNet_Accept_Payments
@@ -39,7 +39,7 @@ For the store owner:
 
 **Installing**
 
-1. Upload `zc_plugins/AuthorizeNetAccept/` so it lands at `<store root>/zc_plugins/AuthorizeNetAccept/v1.0.1/`.
+1. Upload `zc_plugins/AuthorizeNetAccept/` so it lands at `<store root>/zc_plugins/AuthorizeNetAccept/v1.0.2/`.
 2. Zen Cart 1.5.8 through 2.0.x only: also upload the `includes` folder from the package's `for_zen_cart_1.5.8_to_2.0.x` folder. Those releases look for a payment module only in the core folders; the two small files there hand off to the plugin. From 2.1.0 on, skip this.
 3. Admin -> Modules -> Plugin Manager -> Authorize.Net Accept.js Payments -> Install.
 4. Admin -> Modules -> Payment -> Authorize.net (Accept.js) -> Install, then Edit: enter the API Login ID, Transaction Key and Public Client Key, and choose the Transaction Mode.

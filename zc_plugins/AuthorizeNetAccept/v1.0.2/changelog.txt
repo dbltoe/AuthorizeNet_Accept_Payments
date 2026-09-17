@@ -1,5 +1,14 @@
 Authorize.Net Accept.js Payments -- changelog
 
+v1.0.2 (2026-09-16)
+- The invoice number sent to the gateway now predicts the next order number the
+  way core's AIM module does (highest order id plus one) instead of reading the
+  orders table's counter from SHOW TABLE STATUS, which MySQL 8.0 and later serve
+  from a statistics cache refreshed once a day: the same base number repeated
+  across a day's orders. The random suffix kept every invoice unique, so no
+  transaction was affected. Reported by chadlly2003 in the support thread.
+- Nothing else changes: no settings change, no database change.
+
 v1.0.1 (2026-09-15)
 - Wallet hook in the checkout script (window.authorizenet_accept.setWalletToken())
   so Apple Pay, Google Pay and other add-ons can hand over a token: the script
