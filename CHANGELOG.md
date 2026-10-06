@@ -1,5 +1,23 @@
 # Changelog
 
+## v1.0.3 (2026-10-06)
+
+- Plugin ID is now 2459, the ID the Plugins Library assigned on 6 October
+  2026 (the listing's earlier ID 2261 belonged to another plugin), so update
+  notices in Plugin Manager now report this plugin.
+- No payment, code or settings changes. Upgrading is optional and only
+  matters for update notices.
+- Upgrading: put the `v1.0.3` folder beside the old one and click Upgrade in
+  Plugin Manager; Modules > Payment keeps its settings and credentials. On
+  Zen Cart 2.2.0 and later the next Plugin Manager visit records the new ID.
+  Zen Cart 1.5.8 through 2.1.x record the ID only when the plugin is first
+  registered, so an Upgrade there doesn't change it, and upgrading isn't
+  required: run this one line in Tools > Install SQL Patches (it adds your
+  table prefix), or in phpMyAdmin with your prefix added:
+  `UPDATE plugin_control SET zc_contrib_id = 2459 WHERE unique_key = 'AuthorizeNetAccept';`
+  Don't remove the plugin folder to force the ID; on a live store that can
+  take the payment module off the checkout.
+
 ## v1.0.2 (2026-09-16)
 
 - The invoice number sent to the gateway now predicts the next order number

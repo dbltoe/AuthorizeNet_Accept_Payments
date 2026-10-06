@@ -26,7 +26,7 @@ require_once __DIR__ . '/authorizenet_accept/AuthorizeNetAcceptLog.php';
 
 class authorizenet_accept extends base
 {
-    const VERSION = '1.0.2';
+    const VERSION = '1.0.3';
     const CONFIG_PREFIX = 'MODULE_PAYMENT_AUTHORIZENET_ACCEPT_';
     const CONFIG_GROUP_ID = 6;
     const SCRIPT_SANDBOX = 'https://jstest.authorize.net/v1/Accept.js';

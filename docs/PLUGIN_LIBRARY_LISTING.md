@@ -1,13 +1,14 @@
 # Plugins Library listing text
 
-Not yet listed. Paste into the Zen Cart Plugins Library submission form,
-category **Payment Modules**. The form takes Markdown. Not part of the
+Listed at https://www.zen-cart.com/plugins/authorizenet-accept-js-payments
+as Plugin ID 2459, category **Payment Modules**. The Library renumbered the
+listing on 2026-10-06: its earlier ID 2261 also belonged to another plugin
+(swguy's Audit), so the version server answered update checks with that one.
+2459 is in the manifest from v1.0.3. The form takes Markdown. Not part of the
 release package.
 
-The Plugin ID arrives on acceptance: put it in the manifest, rebuild, run
-the suite, commit, push, re-upload the zip. The listing's version string
-must match the manifest exactly, `v` included, or nobody is notified of
-updates.
+The listing's version string must match the manifest exactly, `v` included,
+or nobody is notified of updates.
 
 ---
 
@@ -91,7 +92,7 @@ this module's notifier seams.
 
 ## Version and compatibility fields
 
-- Version: v1.0.2
+- Version: v1.0.3
 - Zen Cart versions: v158, v200, v210, v220, v230, v300
 - PHP: 7.4 through 8.5
 - License: GPL-2.0

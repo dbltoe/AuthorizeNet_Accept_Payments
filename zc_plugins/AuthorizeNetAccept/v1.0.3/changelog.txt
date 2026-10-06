@@ -1,5 +1,22 @@
 Authorize.Net Accept.js Payments -- changelog
 
+v1.0.3 (2026-10-06)
+- Plugin ID is now 2459, the ID the Plugins Library assigned on 6 October 2026
+  (the listing's earlier ID 2261 belonged to another plugin), so update notices
+  in Plugin Manager now report this plugin.
+- No payment, code or settings changes. Upgrading is optional and only matters
+  for update notices.
+- Upgrading: put the v1.0.3 folder beside the old one and click Upgrade in
+  Plugin Manager; Modules > Payment keeps its settings and credentials. Zen Cart
+  2.2.0 and later record the new ID on the next Plugin Manager visit. Zen Cart
+  1.5.8 through 2.1.x record it only when the plugin is first registered, so
+  upgrading there doesn't change it and isn't required: run this one line in
+  Tools > Install SQL Patches (it adds your table prefix), or in phpMyAdmin
+  with your prefix added:
+  UPDATE plugin_control SET zc_contrib_id = 2459 WHERE unique_key = 'AuthorizeNetAccept';
+  Don't remove the plugin folder to force the ID; on a live store that can take
+  the payment module off the checkout.
+
 v1.0.2 (2026-09-16)
 - The invoice number sent to the gateway now predicts the next order number the
   way core's AIM module does (highest order id plus one) instead of reading the

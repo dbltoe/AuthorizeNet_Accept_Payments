@@ -38,7 +38,8 @@ check('the description tells the owner the second step: Modules > Payment', strp
 check('the Forum Support Thread button links the opening-post permalink', strpos($desc, 'href="https://www.zen-cart.com/threads/207341?page=1#post-1347112"') !== false && strpos($desc, 'Forum Support Thread') !== false);
 
 section('release hygiene');
-check('pluginId is 0 until the Library assigns one, or a real id', is_int($manifest['pluginId']));
+check('pluginId is the Library\'s 2459 as a bare integer (renumbered from 2261 on 2026-10-06)', $manifest['pluginId'] === 2459);
+check('pluginId is written unquoted in the manifest', preg_match("~'pluginId' => 2459,~", file_get_contents($PLUGIN . '/manifest.php')) === 1);
 check('no license URL that 404s', strpos(file_get_contents($PLUGIN . '/manifest.php'), 'zen-cart.com/license') === false);
 
 ana_done('manifest is consistent');
