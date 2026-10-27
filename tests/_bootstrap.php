@@ -184,6 +184,12 @@ class AnaDb
         return $this->insertId;
     }
 
+    /** queryFactory::prepare_input(): escaped for a quoted SQL string. */
+    public function prepare_input($string)
+    {
+        return addslashes((string)$string);
+    }
+
     /** Statements matching a substring, for assertions. */
     public function matching($needle)
     {

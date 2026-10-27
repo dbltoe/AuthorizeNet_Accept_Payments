@@ -1,5 +1,22 @@
 # Changelog
 
+## v1.0.4 (2026-10-27)
+
+- New Settings button in Plugin Manager. Once the plugin is installed, its
+  info panel has a Settings button that opens Modules > Payment with
+  Authorize.net (Accept.js) selected, where the module is installed and set
+  up. It isn't shown before Install or after Uninstall, and it works on every
+  supported release (1.5.8 through 3.0.0): the installer saves the panel again
+  at Install, Upgrade and Uninstall, because 1.5.8, 2.0 and 2.1 otherwise keep
+  the panel they saw first.
+- The buttons are one row: ReadMe | Settings | Forum Thread | GitHub. "Read
+  Me" is now "ReadMe" and "Forum Support Thread" is now "Forum Thread". The
+  buttons are a little narrower (8px side padding, 4px gaps), so all four fit
+  on one line from a 1366px-wide window up.
+- Plugin Manager only. No payment, checkout or settings changes.
+- Upgrading: put the `v1.0.4` folder beside the old one and click Upgrade in
+  Plugin Manager; Modules > Payment keeps its settings and credentials.
+
 ## v1.0.3 (2026-10-06)
 
 - Plugin ID is now 2459, the ID the Plugins Library assigned on 6 October

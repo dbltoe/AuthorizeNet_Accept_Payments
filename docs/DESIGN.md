@@ -43,8 +43,8 @@ Why it exists (researched 2026-09-13):
 ## 3. File map
 
 ```
-zc_plugins/AuthorizeNetAccept/v1.0.3/
-  manifest.php                               Plugin Manager panel (Read Me / GitHub / forum buttons)
+zc_plugins/AuthorizeNetAccept/v1.0.4/
+  manifest.php                               Plugin Manager panel (ReadMe / Settings / Forum Thread / GitHub buttons)
   readme.html                                the store owner's manual, served from zc_plugins
   changelog.txt
   Installer/ScriptedInstaller.php            table create; ZC/PHP/curl checks; uninstall removes the module's settings

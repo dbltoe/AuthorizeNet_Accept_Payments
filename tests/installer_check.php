@@ -17,6 +17,29 @@ define('IS_ADMIN_FLAG', true);
 define('DB_PREFIX', 'zen_');
 define('TABLE_CONFIGURATION', 'zen_configuration');
 define('PLUGIN_INSTALL_SQL_FAILURE', 'x');
+define('TABLE_PLUGIN_CONTROL', 'zen_plugin_control');
+define('DIR_WS_CATALOG', '/shop/');
+
+/**
+ * A database whose plugin_control row says what core has written at the
+ * moment the installer runs, so the harness shows the installer's saved
+ * description doesn't depend on it: during Install core hasn't set status 1
+ * yet (1.5.8 through 3.0.0), and during 3.0.0's Uninstall it hasn't set
+ * status 0 yet.
+ */
+function ana_installer_db($statusDuringStep)
+{
+    $db = new AnaDb();
+    $db->answers['FROM zen_plugin_control'] = [['status' => $statusDuringStep]];
+    $GLOBALS['db'] = $db;
+    return $db;
+}
+
+/** The description UPDATEs the installer sent to plugin_control. */
+function ana_description_updates(AnaDb $db)
+{
+    return $db->matching('UPDATE zen_plugin_control SET description');
+}
 $versions = [
     'normal' => ['2', '2.2'],
     'old-zc' => ['2', '0.1'],
@@ -90,7 +113,9 @@ if ($mode !== 'normal') {
             break;
         case 'old-zc-bridged':
             check('Zen Cart 2.0.1 with the bridge files installs', $ok === true && $errors->errors === []);
-            check('the table is created', count($db->log) === 1 && strpos($db->log[0], 'CREATE TABLE IF NOT EXISTS') === 0);
+            check('the table is created', count($db->matching('CREATE TABLE IF NOT EXISTS')) === 1 && strpos($db->log[0], 'CREATE TABLE IF NOT EXISTS') === 0);
+            $saved = ana_description_updates($db);
+            check('2.0 keeps the first description it saw, so the installer saves it again, with Settings', count($saved) === 1 && strpos($saved[0], '>Settings</a>') !== false);
             break;
         case 'zc158a':
             check('1.5.8a is not read as older than 1.5.8 (version_compare treats the letter as a pre-release)', $ok === true && $errors->errors === []);
@@ -105,11 +130,11 @@ if ($mode !== 'normal') {
 }
 
 section('install');
-$db = new AnaDb();
+$db = ana_installer_db(0);
 $errors = new AnaErrors();
 $ok = (new ScriptedInstaller($db, $errors))->doInstall();
 check('install succeeds on 2.2.2', $ok === true && $errors->errors === []);
-check('one statement: create the table if it is not there', count($db->log) === 1 && strpos($db->log[0], 'CREATE TABLE IF NOT EXISTS zen_authorizenet_accept') === 0);
+check('two statements: create the table if it is not there, then save the panel', count($db->log) === 2 && strpos($db->log[0], 'CREATE TABLE IF NOT EXISTS zen_authorizenet_accept') === 0 && strpos($db->log[1], 'UPDATE zen_plugin_control SET description') === 0);
 foreach (['orders_id', 'customers_id', 'session_id', 'transaction_type', 'trans_id', 'ref_trans_id', 'network_trans_id', 'response_code', 'reason_code', 'response_text', 'auth_code', 'avs_code', 'cvv_code', 'account_type', 'account_number', 'amount decimal(15,4)', 'currency char(3)', 'payment_source', 'request_json mediumtext', 'response_json mediumtext', 'date_added datetime'] as $column) {
     check("column $column", strpos($db->log[0], $column) !== false);
 }
@@ -118,10 +143,20 @@ check('InnoDB', strpos($db->log[0], 'ENGINE=InnoDB') !== false);
 check('no configuration rows: those belong to Modules > Payment', $db->matching('zen_configuration') === []);
 check('2.2.2 needs no bridge files: none were looked for in the store root', !is_dir($storeRoot . 'includes'));
 
+section('the panel saved at Install (the Settings button)');
+$saved = ana_description_updates($db);
+check('saved once, for this plugin only (unique_key AuthorizeNetAccept)', count($saved) === 1 && strpos($saved[0], "WHERE unique_key = 'AuthorizeNetAccept' LIMIT 1") !== false);
+check('it has the Settings button although plugin_control still says status 0 (core sets 1 after the installer returns)', strpos($saved[0], '>Settings</a>') !== false);
+check('Settings goes to Modules > Payment with this module selected', strpos($saved[0], 'href=\\"index.php?cmd=modules&amp;set=payment&amp;module=authorizenet_accept\\"') !== false);
+check('the whole row: ReadMe | Settings | Forum Thread | GitHub', preg_match('~>ReadMe</a>.*>Settings</a>.*>Forum Thread</a>.*>GitHub</a>~', $saved[0]) === 1);
+check('the manifest took the installer\'s word and didn\'t read plugin_control', $db->matching('SELECT status FROM zen_plugin_control') === []);
+
 section('upgrade');
-$db = new AnaDb();
+$db = ana_installer_db(1);
 (new ScriptedInstaller($db, new AnaErrors()))->doUpgrade('v0.9.0');
-check('an upgrade re-runs the idempotent table create', count($db->log) === 1 && strpos($db->log[0], 'CREATE TABLE IF NOT EXISTS') === 0);
+check('an upgrade re-runs the idempotent table create', count($db->matching('CREATE TABLE IF NOT EXISTS')) === 1 && strpos($db->log[0], 'CREATE TABLE IF NOT EXISTS') === 0);
+$saved = ana_description_updates($db);
+check('and saves the panel, with the Settings button', count($saved) === 1 && strpos($saved[0], '>Settings</a>') !== false);
 
 section('refusals other than the release');
 $src = file_get_contents($PLUGIN . '/Installer/ScriptedInstaller.php');
@@ -138,7 +173,7 @@ section('uninstall');
 // The module's own remove() needs its class loadable; STATUS defined means "installed under Modules > Payment".
 define('MODULE_PAYMENT_AUTHORIZENET_ACCEPT_STATUS', 'True');
 define('MODULE_PAYMENT_AUTHORIZENET_ACCEPT_SORT_ORDER', '0');
-$db = new AnaDb();
+$db = ana_installer_db(1);
 $db->answers["configuration_key = 'MODULE_PAYMENT_INSTALLED'"] = [['configuration_value' => 'authorizenet_accept.php;cod.php']];
 $ok = (new ScriptedInstaller($db, new AnaErrors()))->doUninstall();
 check('uninstall succeeds', $ok === true);
@@ -146,6 +181,10 @@ check('the module settings are deleted', count($db->matching("DELETE FROM zen_co
 check('the module leaves MODULE_PAYMENT_INSTALLED', count($db->matching("SET configuration_value = 'cod.php'")) === 1);
 check('no settings stash is written and any old one is deleted', $db->matching('INSERT INTO') === [] && count($db->matching("configuration_key = 'AUTHORIZENET_ACCEPT_SETTINGS_STASH'")) >= 1);
 check('the transaction table is kept', $db->matching('DROP TABLE') === []);
+$saved = ana_description_updates($db);
+check('the panel is saved again, once', count($saved) === 1);
+check('without the Settings button although plugin_control still says status 1 (3.0.0 sets 0 after the installer returns)', strpos($saved[0], 'Settings</a>') === false && strpos($saved[0], '>ReadMe</a>') !== false && strpos($saved[0], '>GitHub</a>') !== false);
+check('saved last, after the module settings are gone', end($db->log) === $saved[0]);
 
 section('the version cases, in child processes');
 foreach (['old-zc', 'old-zc-bridged', 'zc158a', 'ancient-zc'] as $child) {

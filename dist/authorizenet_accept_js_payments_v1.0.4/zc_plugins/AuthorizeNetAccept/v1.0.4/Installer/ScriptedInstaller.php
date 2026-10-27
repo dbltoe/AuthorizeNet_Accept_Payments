@@ -39,6 +39,8 @@ class ScriptedInstaller extends ScriptedInstallBase
     ];
     const MIN_PHP_VERSION = '7.4.0';
     const MODULE_FILE = 'authorizenet_accept.php';
+    /** plugin_control.unique_key: the zc_plugins folder name. */
+    const PLUGIN_KEY = 'AuthorizeNetAccept';
 
     protected function executeInstall()
     {
@@ -46,6 +48,9 @@ class ScriptedInstaller extends ScriptedInstallBase
             return false;
         }
         $this->anaCreateTransactionTable();
+        // Only once the install is going ahead: a refused install above leaves
+        // the panel as it was, without the Settings button.
+        $this->anaRefreshPluginDescription(true);
         return true;
     }
 
@@ -55,6 +60,7 @@ class ScriptedInstaller extends ScriptedInstallBase
     protected function executeUpgrade($oldVersion = null)
     {
         $this->anaCreateTransactionTable();
+        $this->anaRefreshPluginDescription(true);
         return true;
     }
 
@@ -77,7 +83,52 @@ class ScriptedInstaller extends ScriptedInstallBase
         // The settings copy a Modules > Payment Remove leaves for the next Install
         // has no reason to outlive the plugin.
         $this->executeInstallerSql("DELETE FROM " . DB_PREFIX . "configuration WHERE configuration_key = 'AUTHORIZENET_ACCEPT_SETTINGS_STASH'");
+        $this->anaRefreshPluginDescription(false);
         return true;
+    }
+
+    /**
+     * Save the manifest's description again, with the Settings button shown
+     * ($installed true: Install, Upgrade) or left out ($installed false:
+     * Uninstall).
+     *
+     * Needed on v1.5.8, v2.0 and v2.1, which store plugin_control.description
+     * only when Plugin Manager first sees the plugin, before Install, so the
+     * Settings button would never appear there. v2.2 and later rewrite the
+     * description from the manifest on every Plugin Manager visit, so this is
+     * a no-op there in effect. Core's own install/uninstall step changes only
+     * status and version, so this description stays.
+     *
+     * Why the installer passes the state instead of the manifest reading
+     * plugin_control.status: this runs inside core's step, and core writes the
+     * status on the wrong side of it for this purpose. processInstall() sets
+     * status 1 only after executeInstall() returns (1.5.8 through 3.0.0), so a
+     * status read here at Install still says "not installed"; and 3.0.0's
+     * processUninstall() sets status 0 only after executeUninstall(). The
+     * variable below is the manifest's signal: require runs manifest.php in
+     * this method's scope, so it sees $anaInstallerSaysInstalled and uses it
+     * instead of the status lookup it makes on an ordinary Plugin Manager
+     * visit.
+     *
+     * @return bool
+     */
+    protected function anaRefreshPluginDescription(bool $installed): bool
+    {
+        if (!defined('TABLE_PLUGIN_CONTROL')) {
+            return true;
+        }
+        $anaInstallerSaysInstalled = $installed;
+        $manifest = require dirname(__DIR__) . '/manifest.php';
+        if (!is_array($manifest) || !isset($manifest['pluginDescription'])) {
+            return true;
+        }
+
+        return $this->executeInstallerSql(
+            "UPDATE " . TABLE_PLUGIN_CONTROL . "
+                SET description = '" . $this->dbConn->prepare_input($manifest['pluginDescription']) . "'
+              WHERE unique_key = '" . $this->dbConn->prepare_input(self::PLUGIN_KEY) . "'
+              LIMIT 1"
+        );
     }
 
     /**
