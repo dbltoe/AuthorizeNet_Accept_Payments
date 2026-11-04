@@ -73,15 +73,45 @@ if (!isset($anaScriptConfig) || !is_array($anaScriptConfig)) {
         return radio.type === 'hidden' || radio.checked === true;
     }
 
-    function showMessage(text) {
+    // Shows (or, with '', hides) the message box under the card fields. With
+    // reveal set, the box is scrolled into view: the button the customer
+    // clicked can be far below it, and an unseen message looks like nothing
+    // happened. fieldId, when given, is the card field to correct; it gets
+    // the focus without a second scroll.
+    function showMessage(text, reveal, fieldId) {
         var box = byId(code + '-error');
-        if (box) {
-            box.textContent = text || '';
-            box.style.display = text ? 'block' : 'none';
-        } else if (text) {
-            window.alert(text);
+        if (!box) {
+            if (text) { window.alert(text); }
+            return;
+        }
+        box.textContent = text || '';
+        box.style.display = text ? 'block' : 'none';
+        if (!text || !reveal) {
+            return;
+        }
+        var field = fieldId ? byId(fieldId) : null;
+        if (field && typeof field.focus === 'function') {
+            try { field.focus({ preventScroll: true }); } catch (e) { field.focus(); }
+        }
+        if (typeof box.scrollIntoView === 'function') {
+            var still = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            try {
+                box.scrollIntoView({ behavior: still ? 'auto' : 'smooth', block: 'center' });
+            } catch (e) {
+                box.scrollIntoView(false);
+            }
         }
     }
+
+    // Accept.js answer codes that name one card field.
+    var acceptFieldFor = {
+        E_WC_05: '-cc-number',
+        E_WC_06: '-cc-expires-month',
+        E_WC_07: '-cc-expires-year',
+        E_WC_08: '-cc-expires-month',
+        E_WC_15: '-cc-cvv',
+        E_WC_17: '-cc-owner'
+    };
 
     function digitsOf(value) {
         return String(value || '').replace(/\D/g, '');
@@ -126,9 +156,10 @@ if (!isset($anaScriptConfig) || !is_array($anaScriptConfig)) {
         };
     }
 
+    // The first problem found, as { text, field } (field = the id to focus), or null.
     function validate(card) {
-        if (card.owner.replace(/\s+/g, '').length < cfg.minOwner) { return cfg.text.owner; }
-        if (card.number.length < 13 || card.number.length > 19 || !luhnOk(card.number)) { return cfg.text.number; }
+        if (card.owner.replace(/\s+/g, '').length < cfg.minOwner) { return { text: cfg.text.owner, field: code + '-cc-owner' }; }
+        if (card.number.length < 13 || card.number.length > 19 || !luhnOk(card.number)) { return { text: cfg.text.number, field: code + '-cc-number' }; }
         var now = new Date();
         var mm = parseInt(card.month, 10);
         var yy = parseInt(card.year, 10);
@@ -136,10 +167,10 @@ if (!isset($anaScriptConfig) || !is_array($anaScriptConfig)) {
         if (isNaN(mm) || mm < 1 || mm > 12 || isNaN(fullYear)
             || fullYear < now.getFullYear()
             || (fullYear === now.getFullYear() && mm < now.getMonth() + 1)) {
-            return cfg.text.expires;
+            return { text: cfg.text.expires, field: code + '-cc-expires-month' };
         }
-        if (cfg.requireCvv && (card.cvv.length < 3 || card.cvv.length > 4)) { return cfg.text.cvv; }
-        return '';
+        if (cfg.requireCvv && (card.cvv.length < 3 || card.cvv.length > 4)) { return { text: cfg.text.cvv, field: code + '-cc-cvv' }; }
+        return null;
     }
 
     function setHidden(name, value) {
@@ -289,14 +320,16 @@ if (!isset($anaScriptConfig) || !is_array($anaScriptConfig)) {
         if (cfg.zip) { secureData.cardData.zip = String(cfg.zip).slice(0, 20); }
 
         window.Accept.dispatchData(secureData, function (response) {
-            var messages = [], i;
+            var messages = [], fieldId = '', i, suffix;
             if (!response || !response.messages || response.messages.resultCode === 'Error' || !response.opaqueData) {
                 if (response && response.messages && response.messages.message) {
                     for (i = 0; i < response.messages.message.length; i++) {
                         messages.push(response.messages.message[i].text);
+                        suffix = acceptFieldFor[response.messages.message[i].code];
+                        if (suffix && !fieldId) { fieldId = code + suffix; }
                     }
                 }
-                showMessage(messages.length ? messages.join(' ') : cfg.text.failed);
+                showMessage(messages.length ? messages.join(' ') : cfg.text.failed, true, fieldId);
                 done(false);
                 return;
             }
@@ -338,7 +371,7 @@ if (!isset($anaScriptConfig) || !is_array($anaScriptConfig)) {
         var card = readCard();
         var problem = validate(card);
         if (problem) {
-            showMessage(problem);
+            showMessage(problem.text, true, problem.field);
             return;
         }
         state.pending = true;
@@ -352,7 +385,7 @@ if (!isset($anaScriptConfig) || !is_array($anaScriptConfig)) {
             });
         }, function () {
             state.pending = false;
-            showMessage(cfg.text.loadFailed);
+            showMessage(cfg.text.loadFailed, true);
         });
     }, true);
 

@@ -76,6 +76,24 @@ check('errors are shown with textContent, never innerHTML', strpos($js, 'box.tex
 check('no eval, no Function constructor, no console', preg_match('~\beval\(|new Function\(|console\.~', $js) === 0);
 check('the re-issued click is the same control', strpos($js, 'control.click();') !== false);
 
+section('card messages are revealed (1.0.5)');
+check('validate() names the field to correct for each problem',
+    strpos($js, "return { text: cfg.text.owner, field: code + '-cc-owner' };") !== false
+    && strpos($js, "return { text: cfg.text.number, field: code + '-cc-number' };") !== false
+    && strpos($js, "return { text: cfg.text.expires, field: code + '-cc-expires-month' };") !== false
+    && strpos($js, "return { text: cfg.text.cvv, field: code + '-cc-cvv' };") !== false
+    && strpos($js, 'return null;') !== false);
+check('a validation problem is shown revealed, with its field', strpos($js, 'showMessage(problem.text, true, problem.field);') !== false);
+check('an Accept.js error is revealed and its field looked up', strpos($js, 'showMessage(messages.length ? messages.join(\' \') : cfg.text.failed, true, fieldId);') !== false && strpos($js, 'acceptFieldFor[response.messages.message[i].code]') !== false);
+foreach (['E_WC_05' => '-cc-number', 'E_WC_06' => '-cc-expires-month', 'E_WC_07' => '-cc-expires-year', 'E_WC_08' => '-cc-expires-month', 'E_WC_15' => '-cc-cvv', 'E_WC_17' => '-cc-owner'] as $acceptCode => $suffix) {
+    check("Accept.js $acceptCode points at $suffix", strpos($js, "$acceptCode: '$suffix'") !== false);
+}
+check('a failed SDK load is revealed (no field)', strpos($js, 'showMessage(cfg.text.loadFailed, true);') !== false);
+check('the working message and clearing never scroll', strpos($js, 'showMessage(cfg.text.working);') !== false && preg_match("~showMessage\\(''\\s*,~", $js) === 0);
+check('the box is scrolled to the center, smooth unless reduced motion is asked for', strpos($js, "box.scrollIntoView({ behavior: still ? 'auto' : 'smooth', block: 'center' });") !== false && strpos($js, "'(prefers-reduced-motion: reduce)'") !== false);
+check('the field is focused without a second scroll', strpos($js, 'field.focus({ preventScroll: true });') !== false);
+check('alert() only when the box is missing', substr_count($js, 'window.alert(') === 1 && preg_match('~if \(!box\) \{\s*if \(text\) \{ window\.alert\(text\); \}~', $js) === 1);
+
 section('the wallet hook (1.0.1)');
 check('a wallet token in the carriers lets the click through untouched', strpos($js, 'if (fresh || walletTokenPresent()) {') !== false);
 check('only a non-Accept descriptor with a value counts as a wallet token', strpos($js, "descriptor !== '' && descriptor !== acceptDescriptor && carrier('value') !== ''") !== false);

@@ -38,12 +38,13 @@ Why it exists (researched 2026-09-13):
 | Config | Created by the module's `install()` under Modules > Payment | Exactly like a core payment module; the Plugin Manager installer only creates the table. |
 | No `zen_config()` | `cfg()` helper on `defined()`/`constant()` | `zen_config()` is 3.0.0 only. |
 | Wallet hook (1.0.1) | The checkout script owns the hidden carriers for everyone: `window.authorizenet_accept.setWalletToken(descriptor, value, meta)` writes a wallet token into them, selects the module (a real radio click, so One Page Checkout records it), keeps the token in sessionStorage for 15 minutes keyed to the order total, restores it when OPC re-renders the block, and lets the submit click through without card validation or an Accept.js call. Card edits, choosing another method, or submitting the form drop it. Each render dispatches `authorizenet_accept:ready` on the document with the API. | Found through a forum member's Google Pay add-on (2026-09-15): the 1.0.0 interceptor only let its own Accept.js nonce through, so a wallet token in the carriers was blocked on the standard checkout with the card-number message. The Pro's wallets and any third-party add-on need one sanctioned way in. |
+| Card messages are revealed (1.0.5) | A local validation failure, an Accept.js error, or a failed SDK load scrolls the `authorizenet_accept-error` box into view (centered; smooth unless `prefers-reduced-motion`) and focuses the field to correct: `validate()` returns `{ text, field }`, and Accept.js codes E_WC_05/06/07/08/15/17 map to the number, expiration month/year, CVV and owner fields. The "working" message and clearing never scroll. No `alert()` while the box exists. | Forum post #10 (chadlly2003, 2026-11-04): the box sits after the last card field, so on a long page or OPC it can be far above the clicked button and the failure looked silent. His patch added `window.alert()`; we kept the box (`role="alert"`) and added the scroll and focus without the extra click. |
 | Settings survive Remove | `remove()` stashes all but STATUS in one configuration row; `install()` restores and deletes it; Plugin Manager uninstall forgets it | Prompted by zencart/documentation#1456 (torvista, 2026-09-13): re-installing a payment module should not mean retyping every key. Done in the module rather than in a per-site observer so every store gets it. |
 
 ## 3. File map
 
 ```
-zc_plugins/AuthorizeNetAccept/v1.0.4/
+zc_plugins/AuthorizeNetAccept/v1.0.5/
   manifest.php                               Plugin Manager panel (ReadMe / Settings / Forum Thread / GitHub buttons)
   readme.html                                the store owner's manual, served from zc_plugins
   changelog.txt

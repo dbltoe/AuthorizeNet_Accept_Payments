@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Authorize.Net Accept.js Payments v1.0.4 - Read Me</title>
+<title>Authorize.Net Accept.js Payments v1.0.5 - Read Me</title>
 <style>
 body { font: 15px/1.5 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: #222; background: #fff; margin: 0; padding: 24px; max-width: 900px; }
 h1 { font-size: 26px; margin: 0 0 4px; }
@@ -22,7 +22,7 @@ th { background: #f0f0f0; }
 </head>
 <body>
 <h1>Authorize.Net Accept.js Payments</h1>
-<p class="version">Version 1.0.4 for Zen Cart 1.5.8 through 3.0.0. By My Zen Cart Host (dbltoe). GPL-2.0.</p>
+<p class="version">Version 1.0.5 for Zen Cart 1.5.8 through 3.0.0. By My Zen Cart Host (dbltoe). GPL-2.0.</p>
 
 <p>Card payments through Authorize.Net's current JSON API with Accept.js tokenization: the card number and security code are tokenized in the customer's browser and never posted to your store. It's a drop-in successor to the Authorize.net AIM module that ships with Zen Cart, with the same card fields on the same payment page, plus a transaction history and refund, capture and void tools on the order page.</p>
 
@@ -71,7 +71,7 @@ th { background: #f0f0f0; }
 
 <h2 id="install">4. Installing</h2>
 <ol>
-<li>Upload the <code>zc_plugins/AuthorizeNetAccept</code> folder into your store's <code>zc_plugins</code> directory, so that <code>zc_plugins/AuthorizeNetAccept/v1.0.4/manifest.php</code> exists. On Zen Cart 2.1.0 and later nothing else needs uploading; no core file is changed.</li>
+<li>Upload the <code>zc_plugins/AuthorizeNetAccept</code> folder into your store's <code>zc_plugins</code> directory, so that <code>zc_plugins/AuthorizeNetAccept/v1.0.5/manifest.php</code> exists. On Zen Cart 2.1.0 and later nothing else needs uploading; no core file is changed.</li>
 <li><strong>Zen Cart 1.5.8 through 2.0.x only:</strong> also upload the <code>includes</code> folder from the package's <code>for_zen_cart_1.5.8_to_2.0.x</code> folder. It adds two files, <code>includes/modules/payment/authorizenet_accept.php</code> and <code>includes/languages/english/modules/payment/lang.authorizenet_accept.php</code>, that hand off to the plugin; nothing in core is edited. On 2.1.0 and later they're ignored, so they can stay through an upgrade.</li>
 <li>Admin &gt; Modules &gt; Plugin Manager: install <strong>Authorize.Net Accept.js Payments</strong>. This creates the transaction table.</li>
 <li>Admin &gt; Modules &gt; Payment: install <strong>Authorize.net (Accept.js)</strong> (the <strong>Settings</strong> button in the plugin's Plugin Manager panel opens that page with the module selected), click Edit, enter the three credentials, and choose the Transaction Mode.</li>
@@ -165,7 +165,7 @@ th { background: #f0f0f0; }
 <table>
 <tr><th>What you see</th><th>What it means</th></tr>
 <tr><td>"The payment gateway reported a problem: User authentication failed due to invalid authentication values." (E00007)</td><td>The API Login ID or Transaction Key is wrong for the mode you're in. Sandbox credentials only work in Sandbox mode, live ones only in Test or Production.</td></tr>
-<tr><td>"Your card details could not be secured for transmission."</td><td>Accept.js couldn't tokenize the card: usually a wrong Public Client Key, an API Login ID that doesn't match it, or the browser blocking <code>js.authorize.net</code>. The script shows the gateway's own message under the card fields when it has one.</td></tr>
+<tr><td>"Your card details could not be secured for transmission."</td><td>Accept.js couldn't tokenize the card: usually a wrong Public Client Key, an API Login ID that doesn't match it, or the browser blocking <code>js.authorize.net</code>. The script shows the gateway's own message under the card fields when it has one, scrolls it into view, and puts the cursor in the field it names.</td></tr>
 <tr><td>"Your card details did not arrive securely."</td><td>The form posted without a nonce. JavaScript is off, or something on the page prevented the script from running. Check the browser console.</td></tr>
 <tr><td>E00003 in a log</td><td>The gateway rejected the request's structure. Report it with the masked log; the module orders every element as the schema requires, so this points at something an add-on changed.</td></tr>
 <tr><td>E00114 "Invalid OTS Token"</td><td>The nonce expired or was used twice. The customer waited more than 15 minutes on the confirmation page; they can enter the card again.</td></tr>

@@ -1,5 +1,20 @@
 # Changelog
 
+## v1.0.5 (2026-11-04)
+
+- A card problem at checkout can no longer go unnoticed. The message (name,
+  card number, expiration, security code, or the answer Accept.js gives) has
+  always appeared in the box under the card fields, but on a long payment page
+  or One Page Checkout that box can be well above the Continue or Confirm
+  button, so it looked as if nothing happened. The box now scrolls into view
+  and the field to correct gets the focus. There's no popup; the box keeps its
+  `role="alert"`, so screen readers announce it. Reported in the support thread
+  (post #10).
+- The scroll is smooth unless the shopper's device asks for reduced motion.
+- Checkout script only. No payment, settings or database changes.
+- Upgrading: put the `v1.0.5` folder beside the old one and click Upgrade in
+  Plugin Manager; Modules > Payment keeps its settings and credentials.
+
 ## v1.0.4 (2026-10-27)
 
 - New Settings button in Plugin Manager. Once the plugin is installed, its
