@@ -42,9 +42,11 @@ Copy-Item (Join-Path $root 'zc_plugins') (Join-Path $dist 'zc_plugins') -Recurse
 # The bridge files for Zen Cart 1.5.8 - 2.0.x, in the folder the docs name.
 Copy-Item (Join-Path $root 'for_zen_cart_1.5.8_to_2.0.x') (Join-Path $dist 'for_zen_cart_1.5.8_to_2.0.x') -Recurse
 
-# readme.html again at the package root, so it can be opened straight out of
-# the download without digging four levels down.
-Copy-Item (Join-Path $root "zc_plugins\AuthorizeNetAccept\$version\readme.html") (Join-Path $dist 'readme.html')
+# README.md is at the package root (above) and inside the plugin (in zc_plugins); the two
+# must be the same file, which tests\readme_check.php also checks.
+if ((Get-FileHash (Join-Path $dist 'README.md')).Hash -ne (Get-FileHash (Join-Path $dist "zc_plugins\AuthorizeNetAccept\$version\README.md")).Hash) {
+    throw 'README.md at the root and in the plugin differ'
+}
 
 if (Test-Path $zip) { Remove-Item $zip -Force }
 Add-Type -AssemblyName System.IO.Compression.FileSystem

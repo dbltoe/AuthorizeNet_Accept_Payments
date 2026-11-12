@@ -1,0 +1,82 @@
+Authorize.Net Accept.js Payments -- changelog
+
+v1.0.6 (2026-11-11)
+- License: GNU General Public License, version 3 (was version 2).
+- readme.html is replaced by README.md. The ReadMe button in Plugin Manager
+  opens it inside the admin, for superusers only, in its own window; it is no
+  longer a public file under zc_plugins/.
+- Plugin Manager and documentation only. No payment, checkout or settings
+  changes.
+- Upgrading: put the v1.0.6 folder beside the old one and click Upgrade in
+  Plugin Manager; Modules > Payment keeps its settings and credentials.
+
+v1.0.5 (2026-11-04)
+- A card problem at checkout can no longer go unnoticed. The message always
+  appeared in the box under the card fields, but on a long payment page or One
+  Page Checkout that box can be well above the Continue or Confirm button. The
+  box now scrolls into view and the field to correct gets the focus. No popup;
+  the box keeps role="alert" for screen readers. Smooth scroll unless the
+  device asks for reduced motion. Reported in the support thread (post #10).
+- Checkout script only. No payment, settings or database changes.
+- Upgrading: put the v1.0.5 folder beside the old one and click Upgrade in
+  Plugin Manager; Modules > Payment keeps its settings and credentials.
+
+v1.0.4 (2026-10-27)
+- New Settings button in Plugin Manager. Once the plugin is installed, its info
+  panel has a Settings button that opens Modules > Payment with
+  Authorize.net (Accept.js) selected. It isn't shown before Install or after
+  Uninstall. The installer saves the panel again at Install, Upgrade and
+  Uninstall, because 1.5.8, 2.0 and 2.1 otherwise keep the panel they saw first.
+- The buttons are one row: ReadMe | Settings | Forum Thread | GitHub ("Read Me"
+  is now "ReadMe", "Forum Support Thread" is now "Forum Thread"), a little
+  narrower so all four fit on one line from a 1366px window up.
+- Plugin Manager only. No payment, checkout or settings changes.
+- Upgrading: put the v1.0.4 folder beside the old one and click Upgrade in
+  Plugin Manager; Modules > Payment keeps its settings and credentials.
+
+v1.0.3 (2026-10-06)
+- Plugin ID is now 2459, the ID the Plugins Library assigned on 6 October 2026
+  (the listing's earlier ID 2261 belonged to another plugin), so update notices
+  in Plugin Manager now report this plugin.
+- No payment, code or settings changes. Upgrading is optional and only matters
+  for update notices.
+- Upgrading: put the v1.0.3 folder beside the old one and click Upgrade in
+  Plugin Manager; Modules > Payment keeps its settings and credentials. Zen Cart
+  2.2.0 and later record the new ID on the next Plugin Manager visit. Zen Cart
+  1.5.8 through 2.1.x record it only when the plugin is first registered, so
+  upgrading there doesn't change it and isn't required: run this one line in
+  Tools > Install SQL Patches (it adds your table prefix), or in phpMyAdmin
+  with your prefix added:
+  UPDATE plugin_control SET zc_contrib_id = 2459 WHERE unique_key = 'AuthorizeNetAccept';
+  Don't remove the plugin folder to force the ID; on a live store that can take
+  the payment module off the checkout.
+
+v1.0.2 (2026-09-16)
+- The invoice number sent to the gateway now predicts the next order number the
+  way core's AIM module does (highest order id plus one) instead of reading the
+  orders table's counter from SHOW TABLE STATUS, which MySQL 8.0 and later serve
+  from a statistics cache refreshed once a day: the same base number repeated
+  across a day's orders. The random suffix kept every invoice unique, so no
+  transaction was affected. Reported by chadlly2003 in the support thread.
+- Nothing else changes: no settings change, no database change.
+
+v1.0.1 (2026-09-15)
+- Wallet hook in the checkout script (window.authorizenet_accept.setWalletToken())
+  so Apple Pay, Google Pay and other add-ons can hand over a token: the script
+  fills the hidden fields, selects the module, keeps the token through a One
+  Page Checkout re-render, and lets the order through without asking for a
+  card. 1.0.0 only let its own nonce through.
+- Script config carries the order total, currency, mode and the Accept
+  descriptor; an authorizenet_accept:ready event fires on each render.
+- Nothing changes for card payments.
+
+v1.0.0 (2026-09-13)
+- First release.
+- Card payments through Authorize.Net's JSON API (createTransactionRequest) with
+  Accept.js tokenization: the card number and CVV are never posted to the store.
+- Authorize-only or authorize-and-capture, held-for-review handling, gateway
+  receipts, duplicate-transaction window, line items, tax and shipping detail.
+- Order page: transaction history plus refund, capture and void.
+- Notifier seams for add-ons (see docs/CUSTOMIZING.md).
+- Zen Cart 1.5.8 through 3.0.0, PHP 7.4 through 8.5, from one codebase;
+  1.5.8 through 2.0.x add two bridge files in the core folders.

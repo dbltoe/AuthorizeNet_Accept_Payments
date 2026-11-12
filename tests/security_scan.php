@@ -40,6 +40,15 @@ function rel($path)
     return substr($path, strlen($PLUGIN) + 1);
 }
 
+// The admin ReadMe page is the one file allowed to read a file and echo a
+// variable; what it reads and echoes is pinned down by its own checks below.
+$READMEPAGE = 'admin/authorizenet_accept_readme.php';
+$readmePageSrc = (string)file_get_contents($PLUGIN . '/' . $READMEPAGE);
+$notReadmePage = array_values(array_filter($files, static function ($p) use ($READMEPAGE) {
+    return rel($p) !== $READMEPAGE;
+}));
+check('the ReadMe page is among the scanned files, and is the only one set apart', count($files) - count($notReadmePage) === 1);
+
 function scan(array $files, $pattern, array $exempt = [], $onlyExt = null)
 {
     $hits = [];
@@ -87,9 +96,15 @@ section('remote calls and deserialisation');
 /* The gateway call is the module's purpose. It lives in exactly one place,
  * the API client, over TLS with peer verification on. */
 report('curl only in the API client, nothing else remote',
-    scan($files, '~\b(unserialize|file_get_contents|curl_init|fsockopen|stream_socket_client)\s*\(~i', [
+    scan($notReadmePage, '~\b(unserialize|file_get_contents|curl_init|fsockopen|stream_socket_client)\s*\(~i', [
         '~^catalog/includes/modules/payment/authorizenet_accept/AuthorizeNetAcceptApi\.php:.*curl_init~',
     ]));
+check('the one other exception, the admin ReadMe page, reads only its own README.md (a fixed local path) and makes no remote call',
+    substr_count($readmePageSrc, 'file_get_contents(') === 1
+    && strpos($readmePageSrc, '$anaReadmeFile = dirname(__DIR__) . \'/README.md\';') !== false
+    && strpos($readmePageSrc, 'file_get_contents($anaReadmeFile)') !== false
+    && preg_match('~\b(unserialize|curl_init|fsockopen|stream_socket_client)\s*\(~i', $readmePageSrc) === 0
+    && preg_match('~\$_(GET|POST|REQUEST|COOKIE|SERVER|FILES)~', $readmePageSrc) === 0);
 $apiSrc = file_get_contents($PLUGIN . '/catalog/includes/modules/payment/authorizenet_accept/AuthorizeNetAcceptApi.php');
 check('the client verifies the gateway certificate', strpos($apiSrc, 'CURLOPT_SSL_VERIFYPEER, true') !== false && strpos($apiSrc, 'CURLOPT_SSL_VERIFYHOST, 2') !== false);
 /* Comments may cite documentation URLs; code may not. Line comments are only
@@ -160,7 +175,10 @@ report('no $_GET/$_POST/$_FILES reaching include/require/readfile/unlink',
 
 section('output escaping');
 report('no unescaped variable echoed',
-    scan($files, '~\becho\s+\$[a-z_]~i', [], ['php']));
+    scan($notReadmePage, '~\becho\s+\$[a-z_]~i', [], ['php']));
+check('the one exception, the admin ReadMe page, echoes only the escape-first Markdown render',
+    substr_count($readmePageSrc, 'echo ') === 1 && strpos($readmePageSrc, '<?php echo $anaReadmeHtml; ?>') !== false
+    && strpos($readmePageSrc, '$text = htmlspecialchars((string)$text, ENT_QUOTES, \'UTF-8\');') !== false);
 $adminSrc = file_get_contents($PLUGIN . '/catalog/includes/modules/payment/authorizenet_accept/admin_notification.php');
 /* Eight columns in the history row, each through the escaper; and no row value
  * concatenated straight into the markup. */
@@ -183,6 +201,14 @@ foreach ($files as $path) {
     }
 }
 report('every included file carries the guard', $noGuard);
+
+section('license');
+check('the readme names the GPL license', preg_match('~GNU General Public License~', (string)file_get_contents($PLUGIN . '/README.md')) === 1);
+$noHeader = array_values(array_filter($files, static function ($p) {
+    return strtolower(pathinfo($p, PATHINFO_EXTENSION)) === 'php'
+        && strpos((string)file_get_contents($p), 'https://www.gnu.org/licenses/gpl-3.0.html GNU General Public License v3.0') === false;
+}));
+report('every PHP file, the bridge files included, carries the GPL v3 header', array_map('rel', $noHeader));
 
 section('CSRF and confirmation');
 check('the three order-page forms are drawn with the security-token flag', substr_count($adminSrc, "'post', '', true)") === 3);

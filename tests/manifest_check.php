@@ -11,8 +11,6 @@
 
 require __DIR__ . '/_bootstrap.php';
 
-define('DIR_WS_CATALOG', '/shop/');
-
 $PLUGIN = ana_plugin_dir();
 $version = basename($PLUGIN);
 $manifest = require $PLUGIN . '/manifest.php';
@@ -64,8 +62,12 @@ check('author fits the varchar(64) columns', strlen($manifest['pluginAuthor']) <
 check('name fits the varchar(255) column', strlen($manifest['pluginName']) <= 255);
 
 section('panel buttons');
-check('readme link honours DIR_WS_CATALOG', strpos($desc, 'href="/shop/zc_plugins/AuthorizeNetAccept/' . $version . '/readme.html"') !== false);
-check('readme.html exists at that path', is_file($PLUGIN . '/readme.html'));
+check('ReadMe opens the admin readme page, not a public file',
+    strpos($desc, 'href="index.php?cmd=authorizenet_accept_readme" target="_blank" rel="noopener noreferrer"') !== false
+    && strpos($desc, 'readme.html') === false);
+check('the page and the README.md it shows exist',
+    is_file($PLUGIN . '/admin/authorizenet_accept_readme.php') && is_file($PLUGIN . '/README.md'));
+check('no version-specific path is hard-coded in the manifest', strpos($src, 'zc_plugins/AuthorizeNetAccept/v') === false);
 check('GitHub button and github_repo agree', strpos($desc, 'href="' . $manifest['github_repo'] . '"') !== false && strpos($manifest['github_repo'], 'https://github.com/dbltoe/') === 0);
 check('the description tells the owner the second step: Modules > Payment', strpos($desc, 'Modules &gt; Payment') !== false);
 check('the Forum Thread button links the opening-post permalink', strpos($desc, 'href="https://www.zen-cart.com/threads/207341?page=1#post-1347112"') !== false && strpos($desc, '>Forum Thread</a>') !== false);
@@ -96,7 +98,9 @@ foreach ([
     check($case . ': ' . implode(' | ', ana_labels($d)), ana_labels($d) === $want);
     check('  every button styled and spaced alike', substr_count($d, 'style="margin:0 4px 0 0;padding-left:8px;padding-right:8px"') === count($want));
     if ($want === $row4) {
-        check('  Settings links relatively to Modules > Payment with the module selected, same tab', strpos($d, $settingsHref) !== false && preg_match('~href="index.php[^"]*" target=~', $d) === 0);
+        check('  Settings links relatively to Modules > Payment with the module selected, same tab', strpos($d, $settingsHref) !== false
+            // The one admin link that does open its own window is ReadMe.
+            && preg_match_all('~href="(index.php[^"]*)" target=~', $d, $own) === 1 && $own[1][0] === 'index.php?cmd=authorizenet_accept_readme');
     }
     $lookups = $db->matching("SELECT status FROM zen_plugin_control WHERE unique_key = 'AuthorizeNetAccept' LIMIT 1");
     check($installerSays === null ? '  read plugin_control once, by this plugin\'s key' : '  took the installer\'s word: no plugin_control read', count($lookups) === ($installerSays === null ? 1 : 0));
@@ -111,5 +115,31 @@ section('release hygiene');
 check('pluginId is the Library\'s 2459 as a bare integer (renumbered from 2261 on 2026-10-06)', $manifest['pluginId'] === 2459);
 check('pluginId is written unquoted in the manifest', preg_match("~'pluginId' => 2459,~", file_get_contents($PLUGIN . '/manifest.php')) === 1);
 check('no license URL that 404s', strpos(file_get_contents($PLUGIN . '/manifest.php'), 'zen-cart.com/license') === false);
+
+section('the ReadMe button is for superusers');
+// Non-superusers don't get a ReadMe button (a child PHP, so zen_is_superuser() can be
+// defined; a temp script, because escapeshellarg() strips double quotes on Windows).
+$childScript = tempnam(sys_get_temp_dir(), 'ana');
+file_put_contents($childScript, '<?php define(\'SUPERUSER_PROFILE\', 1); function zen_is_superuser() { return false; } $m = require ' . var_export($PLUGIN . '/manifest.php', true) . ';'
+    . ' echo (strpos($m[\'pluginDescription\'], \'>ReadMe</a>\') === false && strpos($m[\'pluginDescription\'], \'>GitHub</a>\') !== false) ? \'hidden\' : \'shown\';');
+$childOut = trim((string)shell_exec(escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg($childScript)));
+unlink($childScript);
+check('a non-superuser sees no ReadMe button', $childOut === 'hidden');
+$childScript = tempnam(sys_get_temp_dir(), 'ana');
+file_put_contents($childScript, '<?php define(\'SUPERUSER_PROFILE\', 1); function zen_is_superuser() { return true; } $m = require ' . var_export($PLUGIN . '/manifest.php', true) . ';'
+    . ' echo (strpos($m[\'pluginDescription\'], \'>ReadMe</a>\') !== false) ? \'shown\' : \'hidden\';');
+$childOut = trim((string)shell_exec(escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg($childScript)));
+unlink($childScript);
+check('a superuser sees it', $childOut === 'shown');
+// Zen Cart 3.0.0 reads manifests early on every admin page, before SUPERUSER_PROFILE
+// exists; core's zen_is_superuser() then dies on the undefined constant.
+$childScript = tempnam(sys_get_temp_dir(), 'ana');
+file_put_contents($childScript, '<?php function zen_is_superuser() { return 1 === SUPERUSER_PROFILE; } $m = require ' . var_export($PLUGIN . '/manifest.php', true) . '; echo \'loaded\';');
+$childOut = trim((string)shell_exec(escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg($childScript) . ' 2>&1'));
+unlink($childScript);
+check('the manifest loads before admin access exists (3.0.0 reads it on every admin page)', $childOut === 'loaded');
+check('the gate is guarded in the source',
+    strpos($src, "if (function_exists('zen_is_superuser') && defined('SUPERUSER_PROFILE')) {") !== false
+    && strpos($src, '$anaShowReadme = zen_is_superuser();') !== false);
 
 ana_done('manifest is consistent');

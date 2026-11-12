@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.0.6 (2026-11-11)
+
+- **License: GNU General Public License, version 3** (was version 2).
+- **readme.html is replaced by README.md.** The ReadMe button in Plugin
+  Manager opens it inside the admin, for superusers only, in its own window
+  (`index.php?cmd=authorizenet_accept_readme`); it is no longer a public file
+  under `zc_plugins/`. The same README.md is at the root of the download.
+- Plugin Manager and documentation only. No payment, checkout or settings
+  changes.
+- Upgrading: put the `v1.0.6` folder beside the old one and click Upgrade in
+  Plugin Manager; Modules > Payment keeps its settings and credentials.
+
 ## v1.0.5 (2026-11-04)
 
 - A card problem at checkout can no longer go unnoticed. The message (name,

@@ -7,7 +7,7 @@ The companion Pro plugin's design lives in the Pro repo's docs/DESIGN.md.
 
 A payment module for Zen Cart 1.5.8 through 3.0.0 that takes card payments
 through Authorize.Net's current JSON API with Accept.js tokenization, as a
-drop-in successor to the core Authorize.net AIM module. Free, GPL-2.0, in the
+drop-in successor to the core Authorize.net AIM module. Free, GPL-3.0, in the
 Zen Cart Plugins Library.
 
 Why it exists (researched 2026-09-13):
@@ -44,9 +44,10 @@ Why it exists (researched 2026-09-13):
 ## 3. File map
 
 ```
-zc_plugins/AuthorizeNetAccept/v1.0.5/
+zc_plugins/AuthorizeNetAccept/v1.0.6/
   manifest.php                               Plugin Manager panel (ReadMe / Settings / Forum Thread / GitHub buttons)
-  readme.html                                the store owner's manual, served from zc_plugins
+  README.md                                  the store owner's manual (the same file is at the package root)
+  admin/authorizenet_accept_readme.php       shows README.md in the admin, superusers only (the ReadMe button)
   changelog.txt
   Installer/ScriptedInstaller.php            table create; ZC/PHP/curl checks; uninstall removes the module's settings
   admin/includes/extra_datafiles/            TABLE_AUTHORIZENET_ACCEPT
